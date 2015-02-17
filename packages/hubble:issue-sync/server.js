@@ -308,13 +308,34 @@ var resyncAllIssues = function (options, cb) {
 // Unfortunately can't get this from WebAppInternals.
 var myPersonalConnect = Npm.require('connect');
 WebApp.connectHandlers.use('/webhook', myPersonalConnect.json());
-WebApp.connectHandlers.use('/webhook', function (req, res, next) {
+WebApp.connectHandlers.use('/webhook/issues', Meteor.bindEnvironment(function (req, res, next) {
   if (req.method.toLowerCase() !== 'post') {
-    return next();
+    next();
+    return;
   }
-  // XXX check hash
-  console.log("HOOK", req.body);
-});
+  // XXX check hash (eg just use the existing module for this)
+  if (! req.body.issue) {
+    console.error("Missing issue from issue webhook?");
+    res.writeHead(500);
+    res.end();
+    return;
+  }
+  saveIssue({
+    // XXX error checking
+    repoOwner: req.body.repository.owner.login,
+    repoName: req.body.repository.name,
+    issueResponse: req.body.issue
+  }, function (err) {
+    if (err) {
+      console.error("Error in issue webhook", err);
+      res.writeHead(500);
+      res.end();
+      return;
+    }
+    res.writeHead(200);
+    res.end();
+  });
+}));
 
 // XXX this is for testing, remove
 Meteor.methods({
