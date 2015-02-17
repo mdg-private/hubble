@@ -6,6 +6,5 @@
 
 meteor-platform
 autopublish
-insecure
 hubble:issue-sync
 twbs:bootstrap
