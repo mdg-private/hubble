@@ -12,13 +12,13 @@
 
 <template name="currentIssues">
   <div class="container-fluid">
-    {{#if issues}}
+    {{#if issues.count}}
        <div class="alert alert-danger" role="alert"> Attention! Unlabeled issues. </div>
     {{else}}
        <div class="alert alert-success" role="alert"> GITORY FOR THE GIT GODS </div>
     {{/if}}
     {{#each issues}}
-     {{> issue}}
+      {{> issue}}
     {{/each}}
   </div>
 </template>
