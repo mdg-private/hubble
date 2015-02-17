@@ -1,3 +1,6 @@
+var Future = Npm.require('fibers/future');
+var githubModule = Npm.require('github');
+
 var driver;
 if (Meteor.settings.mongo) {
   driver = new MongoInternals.RemoteCollectionDriver(
@@ -19,11 +22,9 @@ Issues._ensureIndex({
 }, { unique: true });
 // XXX more indices?
 
-var githubModule = Npm.require('github');
-
 var github = new githubModule({
   version: '3.0.0',
-  debug: process.env.GITHUB_API_DEBUG,
+  debug: !!process.env.GITHUB_API_DEBUG,
   headers: {
     "user-agent": "githubble.meteor.com"
   }
@@ -197,18 +198,16 @@ var syncIssue = function (options, cb) {
       id,
       mod,
       { upsert: true },
-      function (err) {
-        console.log("X");
-        if (err) {
-          return cb(err);
-        }
-        cb();
-      }
+      cb  // XXX then update state machine
     );
-    console.log("Y");
   }));
 };
 
-global.S = {
-  syncIssue: syncIssue
-};
+// XXX this is for testing, remove
+Meteor.methods({
+  syncIssue: function (options) {
+    var f = new Future;
+    syncIssue(options, f.resolver());
+    return f.wait();
+  }
+});
