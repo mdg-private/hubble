@@ -30,6 +30,21 @@ var github = new githubModule({
   }
 });
 
+(function () {
+  // This is a "personal access token" with NO SCOPES from
+  // https://github.com/settings/applications.  When running locally,
+  // create one through that interface (BUT UNCHECK ALL THE SCOPE BOXES)
+  // and set it in $GITHUB_TOKEN. When running in production, we'll
+  // share one that's in a settings file in lastpass.
+  var token = Meteor.settings.githubToken || process.env.GITHUB_TOKEN;
+  if (token) {
+    github.authenticate({
+      type: 'token',
+      token: token
+    });
+  }
+})();
+
 var maybeNull = function (pattern) {
   return Match.OneOf(null, pattern);
 };
