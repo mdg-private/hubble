@@ -18,7 +18,7 @@ Issues = new Mongo.Collection('issues', {
 Issues._ensureIndex({
   repoOwner: 1,
   repoName: 1,
-  number: 1
+  'issueDocument.number': 1
 }, { unique: true });
 // XXX more indices?
 
