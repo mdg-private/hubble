@@ -252,6 +252,30 @@ var saveOnePageOfIssues = function (options, cb) {
   }, cb);
 };
 
+var resyncOneIssue = function (options, cb) {
+  if (! asyncCheck(options, {
+    repoOwner: String,
+    repoName: String,
+    number: Match.Integer
+  }, cb)) return;
+
+  github.issues.getRepoIssue({
+    user: options.repoOwner,
+    repo: options.repoName,
+    number: options.number
+  }, Meteor.bindEnvironment(function (err, issue) {
+    if (err) {
+      cb(fixGithubError(err));
+      return;
+    }
+    saveIssue({
+      repoOwner: options.repoOwner,
+      repoName: options.repoName,
+      issueResponse: issue
+    }, cb);
+  }));
+};
+
 // Every so often, we resync all issues for a repo.  This is good for a few
 // things:
 //  - Filling in a newly added repo
@@ -308,24 +332,15 @@ var resyncAllIssues = function (options, cb) {
 // Unfortunately can't get this from WebAppInternals.
 var myPersonalConnect = Npm.require('connect');
 WebApp.connectHandlers.use('/webhook', myPersonalConnect.json());
+// Register this event on GitHub for issue and pull_request.
+// XXX docs
 WebApp.connectHandlers.use('/webhook/issues', Meteor.bindEnvironment(function (req, res, next) {
   if (req.method.toLowerCase() !== 'post') {
     next();
     return;
   }
-  // XXX check hash (eg just use the existing module for this)
-  if (! req.body.issue) {
-    console.error("Missing issue from issue webhook?");
-    res.writeHead(500);
-    res.end();
-    return;
-  }
-  saveIssue({
-    // XXX error checking
-    repoOwner: req.body.repository.owner.login,
-    repoName: req.body.repository.name,
-    issueResponse: req.body.issue
-  }, function (err) {
+
+  var respond = function (err) {
     if (err) {
       console.error("Error in issue webhook", err);
       res.writeHead(500);
@@ -334,7 +349,30 @@ WebApp.connectHandlers.use('/webhook/issues', Meteor.bindEnvironment(function (r
     }
     res.writeHead(200);
     res.end();
-  });
+  };
+
+  // XXX check hash (eg just use the existing module for this)
+  // XXX error checking (esp on repo owner/name)
+  var issueResponse = null;
+  if (req.body.pull_request) {
+    // Unfortunately, the pull_request event inexplicably does not
+    // contain labels, so we can't trust what we hear over the wire.
+    resyncOneIssue({
+      repoOwner: req.body.repository.owner.login,
+      repoName: req.body.repository.name,
+      number: req.body.pull_request.number
+    }, respond);
+    return;
+  } else if (! req.body.issue) {
+    respond(Error("Missing issue from issue webhook?"));
+    return;
+  }
+
+  saveIssue({
+    repoOwner: req.body.repository.owner.login,
+    repoName: req.body.repository.name,
+    issueResponse: req.body.issue
+  }, respond);
 }));
 
 // XXX this is for testing, remove
