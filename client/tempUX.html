@@ -4,7 +4,9 @@
     <div class="col-md-1"> </div>
     <div class="col-md-10">
       {{> currentIssues }}
-   </div>
+      <div class="buffer"> </div>
+      {{> labeledIssues }}
+     </div>
    <div class="col-md-1"> </div>
   </div>
 </template>
@@ -28,7 +30,22 @@
       <img src="{{issueDocument.user.avatarUrl}}" class="avatar">
     </div>
     <div class="col-md-10">
-     {{issueDocument.title}}
+     {{issueDocument.title}} <br>
+     {{#each issueDocument.labels}}
+       <div class="label" style="background:#{{color}}"> {{name}} </div>
+     {{/each}}
     </div>
+  </div>
+</template>
+
+
+<template name="labeledIssues">
+  <div class="container-fluid">
+    <div class="alert alert-info" role="alert">
+      Labels <span class="glyphicon glyphicon-heart"> </span> You!
+    </div>
+    {{#each issues}}
+     {{> issue}}
+    {{/each}}
   </div>
 </template>

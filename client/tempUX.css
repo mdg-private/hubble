@@ -13,3 +13,9 @@
 .buffer {
   height: 3em;
 }
+
+.label {
+  float: left;
+  padding: 1px;
+  border: 4px solid white;
+}
