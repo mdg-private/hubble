@@ -27,6 +27,7 @@ Issue:
     - url: String
     - name: String
     - color: String
+  - hasProjectLabel: Boolean (from labels)
   - assignee: optional User
   - commentCount: Number
   - milestone: optional Object

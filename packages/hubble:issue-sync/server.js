@@ -139,6 +139,9 @@ var issueResponseToModifier = function (options) {
         labels: _.map(i.labels, function (l) {
           return _.pick(l, 'url', 'name', 'color');
         }),
+        hasProjectLabel: !!_.find(i.labels, function (l) {
+          return /^Project:/.test(l.name);
+        }),
         assignee: i.assignee ? userResponseToObject(i.assignee) : null,
         commentCount: i.comments,
         milestone: (
