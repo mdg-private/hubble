@@ -324,4 +324,3 @@ Meteor.methods({
     return f.wait();
   }
 });
-

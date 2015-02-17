@@ -20,6 +20,7 @@ Package.onUse(function(api) {
   api.use(['check', 'mongo', 'webapp', 'underscore']);
   api.addFiles('server.js', 'server');
   api.addFiles('hubble:issue-sync.js');
+  api.export('Issues');
 });
 
 Package.onTest(function(api) {

@@ -1,0 +1,29 @@
+.avatar {
+    height: 50px;
+    width: 50px;
+    padding: 2px;
+}
+
+.main {
+  width: 100vw;
+  height: 100vh;
+  background: #004;
+}
+
+.buffer {
+  height: 3em;
+}
+
+.label {
+  float: left;
+  padding: 1px;
+  border: 4px solid white;
+}
+
+.issue {
+  cursor: pointer;
+}
+
+body {
+  background: #003;
+}
