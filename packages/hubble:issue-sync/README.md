@@ -41,12 +41,15 @@ Issue:
     - diffUrl: String
     - htmlUrl: String
     - patchUrl: String
+  - closedBy: optional User  // XXX not implemented
   - createdAt: Date (from String)
   - closedAt: Date (from String)
   - updatedAt: Date (from String)
 - snoozes: Array of Object
   - when: Date
   - login
+- highlyActive: Boolean
+- highlyActiveToggleDates: [Date] (push when toggled)
 - comments: Map
   - key: created_at STRING + '!' + id
   - value: Object
@@ -57,3 +60,22 @@ Issue:
     - user: User
     - createdAt: Date (from String)
     - updatedAt: Date (from String)
+- recentComments*: Map
+  This is a subset of comments containing comments since the last
+  MDG comment or snooze, for issues that have any response at all.
+- recentCommentsCount*: Number
+- msSpentInNew*: Number
+- status*:
+  - NEW -- no MDG opener/commenter and not (closed-and-only-commented-on-by-original-user)
+  - STIRRING -- exists at least one MDG opener/comment, closed, and last opener/comment/snooze
+    is non-MDG, and not highlyActive
+  - ACTIVE -- exists at least one MDG opener/comment, open, and last opener/comment/snooze
+    is non-MDG, and not highlyActive
+  - HIGHLY ACTIVE -- exists at least one MDG opener/comment and has highlyActive set
+  - TRIAGED -- exists at least one MDG opener/comment, and last opener/comment/snooze
+    is MDG, and open, and not highlyActive
+  - CLOSED -- closed and not highlyActive and either
+    (closed-and-only-commented-on-by-original-user) or the last opener/comment/snooze is MDG
+
+`*` means "derived deterministically from other values on the document (plus
+list of MDG members)".
