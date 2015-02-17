@@ -10,8 +10,14 @@ Package.describe({
   documentation: 'README.md'
 });
 
+Npm.depends({
+  github: '0.2.3'
+});
+
 Package.onUse(function(api) {
-  api.versionsFrom('1.0.3.1');
+  api.use('check');
+  api.use('mongo');
+  api.addFiles('server.js', 'server');
   api.addFiles('hubble:issue-sync.js');
 });
 
