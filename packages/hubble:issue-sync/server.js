@@ -23,6 +23,7 @@ var githubModule = Npm.require('github');
 
 var github = new githubModule({
   version: '3.0.0',
+  debug: process.env.GITHUB_API_DEBUG,
   headers: {
     "user-agent": "githubble.meteor.com"
   }
@@ -162,38 +163,49 @@ var syncIssue = function (options, cb) {
     number: Match.Integer
   });
 
+  var id = issueMongoId(options.repoOwner, options.repoName, options.number);
+  var existing = Issues.findOne(id);
+
+  var headers = {};
+  if (existing && existing.issueEtag) {
+    headers['If-None-Match'] = existing.issueEtag;
+  }
+
   github.issues.getRepoIssue({
     user: options.repoOwner,
     repo: options.repoName,
-    number: options.number
+    number: options.number,
+    headers: headers
   }, Meteor.bindEnvironment(function (err, issue) {
     if (err) {
       return cb(err);
     }
+
+    // Yay, etag matched! Nothing to do.
+    if (issue.meta.status === '304 Not Modified') {
+      return cb();
+    }
+
     var mod = issueResponseToModifier({
       repoOwner: options.repoOwner,
       repoName: options.repoName,
       issueResponse: issue
     });
-    var id = issueMongoId(options.repoOwner, options.repoName, options.number);
-    try {
-      Issues.update(
-        // Specifying _id explicitly means we avoid fake upsert, which is good
-        // because minimongo doesn't do $max yet.
-        id,
-        mod,
-        { upsert: true },
-        function (err) {
-          console.log("X");
-          if (err) {
-            return cb(err);
-          }
-          cb();
+    Issues.update(
+      // Specifying _id explicitly means we avoid fake upsert, which is good
+      // because minimongo doesn't do $max yet.
+      id,
+      mod,
+      { upsert: true },
+      function (err) {
+        console.log("X");
+        if (err) {
+          return cb(err);
         }
-      );
-    } catch (err) {
-      cb(err);
-    }
+        cb();
+      }
+    );
+    console.log("Y");
   }));
 };
 
