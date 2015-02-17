@@ -7,7 +7,7 @@
 .main {
   width: 100vw;
   height: 100vh;
-  background: #000055;
+  background: transparent url('back.jpg') no-repeat left top;
 }
 
 .buffer {

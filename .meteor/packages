@@ -9,4 +9,3 @@ autopublish
 insecure
 hubble:issue-sync
 twbs:bootstrap
-iron:router
