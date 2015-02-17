@@ -1,5 +1,7 @@
 var Future = Npm.require('fibers/future');
 var githubModule = Npm.require('github');
+var githubError = Npm.require('github/error');
+var async = Npm.require('async');
 
 var driver;
 if (Meteor.settings.mongo) {
@@ -12,15 +14,42 @@ if (Meteor.settings.mongo) {
   driver = MongoInternals.defaultRemoteCollectionDriver();
 }
 
-Issues = new Mongo.Collection('issues', {
-  _driver: driver
-});
+// Usage:
+//   if (! asyncCheck(v, p, cb)) return;
+var asyncCheck = function (value, pattern, cb) {
+  try {
+    check(value, pattern);
+  } catch (e) {
+    if (! (e instanceof Match.Error))
+      throw e;
+    console.log("FAILED CHECK", value)
+    cb(e);
+    return false;
+  }
+  return true;
+}
+
+Issues = new Mongo.Collection('issues', { _driver: driver });
 Issues._ensureIndex({
   repoOwner: 1,
   repoName: 1,
   'issueDocument.number': 1
 }, { unique: true });
 // XXX more indices?
+
+
+// id eg 'meteor/meteor#comments'
+// only relevant field is lastDate (String)
+// XXX Turns out that this isn't actually helpful for issues (because
+//     updated_at doesn't tell you about relabelings) but it is probably for
+//     comments.
+var SyncedTo = new Mongo.Collection('syncedTo', { _driver: driver });
+var syncedToMongoId = function (repoOwner, repoName, which) {
+  check(repoOwner, String);
+  check(repoName, String);
+  check(which, String);
+  return repoOwner + '/' + repoName + '#' + which;
+};
 
 var github = new githubModule({
   version: '3.0.0',
@@ -29,6 +58,14 @@ var github = new githubModule({
     "user-agent": "githubble.meteor.com"
   }
 });
+
+// For some reason, the errors from the github module don't show up well.
+var fixGithubError = function (e) {
+  if (! (e instanceof githubError.HttpError))
+    return e;
+  // note that e.message is a string with JSON, from github
+  return new Error(e.message);
+};
 
 (function () {
   // This is a "personal access token" with NO SCOPES from
@@ -87,7 +124,7 @@ var issueResponseMatcher = Match.ObjectIncluding({
     number: Number,
     state: Match.OneOf('open', 'closed'),
     title: String,
-    description: String
+    description: maybeNull(String)
   })),
   pull_request: Match.Optional({  // not maybeNull!
     url: String,
@@ -97,10 +134,7 @@ var issueResponseMatcher = Match.ObjectIncluding({
   }),
   created_at: String,
   closed_at: maybeNull(String),
-  updated_at: String,
-  meta: Match.ObjectIncluding({
-    etag: Match.Optional(String)
-  })
+  updated_at: String
 });
 
 var userResponseToObject = function (userResponse) {
@@ -161,71 +195,133 @@ var issueResponseToModifier = function (options) {
           } : null),
         createdAt: new Date(i.created_at),
         closedAt: i.closed_at ? new Date(i.closed_at) : null,
-        updatedAt: new Date(i.updatedAt)
-      },
-      issueEtag: i.meta.etag || null
-    },
-    $max: {
-      lastMessage: {
-        timestamp: i.created_at,
-        userId: i.user.id,
-        type: 'created'
+        updatedAt: new Date(i.updated_at)
       }
     }
   };
 };
 
-var syncIssue = function (options, cb) {
-  check(options, {
+var saveIssue = function (options, cb) {
+  if (! asyncCheck(options, {
     repoOwner: String,
     repoName: String,
-    number: Match.Integer
-  });
+    issueResponse: issueResponseMatcher
+  }, cb)) return;
 
-  var id = issueMongoId(options.repoOwner, options.repoName, options.number);
-  var existing = Issues.findOne(id);
+  var id = issueMongoId(options.repoOwner,
+                        options.repoName,
+                        options.issueResponse.number);
+  var mod = issueResponseToModifier(
+    _.pick(options, 'repoOwner', 'repoName', 'issueResponse'));
 
-  var headers = {};
-  if (existing && existing.issueEtag) {
-    headers['If-None-Match'] = existing.issueEtag;
+  Issues.update(
+    // Specifying _id explicitly means we avoid fake upsert, which is good
+    // because minimongo doesn't do $max yet.
+    id,
+    mod,
+    { upsert: true },
+    cb
+  );
+};
+
+var ISSUES_PER_PAGE = 100;
+
+// Saves a page of issues.
+var saveOnePageOfIssues = function (options, cb) {
+  if (! asyncCheck(options, {
+    repoOwner: String,
+    repoName: String,
+    issueResponses: [issueResponseMatcher]
+  }, cb)) return;
+
+  var issues = options.issueResponses;
+
+  if (! issues.length) {
+    throw Error("empty page?");
   }
 
-  github.issues.getRepoIssue({
-    user: options.repoOwner,
-    repo: options.repoName,
-    number: options.number,
-    headers: headers
-  }, Meteor.bindEnvironment(function (err, issue) {
-    if (err) {
-      return cb(err);
-    }
-
-    // Yay, etag matched! Nothing to do.
-    if (issue.meta.status === '304 Not Modified') {
-      return cb();
-    }
-
-    var mod = issueResponseToModifier({
+  console.log("Saving " + issues.length + " issues for " +
+              options.repoOwner + "/" + options.repoName + ": " +
+              JSON.stringify(_.pluck(issues, 'number')));
+  async.map(issues, function (issueResponse, cb) {
+    saveIssue({
       repoOwner: options.repoOwner,
       repoName: options.repoName,
-      issueResponse: issue
-    });
-    Issues.update(
-      // Specifying _id explicitly means we avoid fake upsert, which is good
-      // because minimongo doesn't do $max yet.
-      id,
-      mod,
-      { upsert: true },
-      cb  // XXX then update state machine
-    );
-  }));
+      issueResponse: issueResponse
+    }, cb);
+  }, cb);
 };
+
+// Every so often, we resync all issues for a repo.  This is good for a few
+// things:
+//  - Filling in a newly added repo
+//  - Adding things we made have missed if webhook events happened while we
+//    were not deployed
+// Ideally, we would just save a "last updated" timestamp and use the "get all
+// repo issues sorted by updated_at since X" API. Unfortunately, label changes
+// don't appear to change the updated_at timestamp, so they won't get detected
+// by this.  Ah well.
+var resyncAllIssues = function (options, cb) {
+  if (! asyncCheck(options, {
+    repoOwner: String,
+    repoName: String
+  }, cb)) return;
+
+  console.log("Resyncing issues for " +
+              options.repoOwner + "/" + options.repoName);
+
+  var receivePageOfIssues = Meteor.bindEnvironment(function (err, issues) {
+    if (err) {
+      cb(fixGithubError(err));
+      return;
+    }
+    if (! issues.length) {
+      cb();
+      return;
+    }
+
+    saveOnePageOfIssues({
+      repoOwner: options.repoOwner,
+      repoName: options.repoName,
+      issueResponses: issues
+    }, function (err) {
+      if (err) {
+        cb(err);
+      } else if (github.hasNextPage(issues)) {
+        github.getNextPage(issues, receivePageOfIssues);
+      } else {
+        cb();
+      }
+    });
+  });
+
+  github.issues.repoIssues({
+    user: options.repoOwner,
+    repo: options.repoName,
+    per_page: ISSUES_PER_PAGE,
+    state: 'all',
+    sort: 'updated'   // get newest in first, just because that's useful
+  }, receivePageOfIssues);
+};
+
+
+// Unfortunately can't get this from WebAppInternals.
+var myPersonalConnect = Npm.require('connect');
+WebApp.connectHandlers.use('/webhook', myPersonalConnect.json());
+WebApp.connectHandlers.use('/webhook', function (req, res, next) {
+  if (req.method.toLowerCase() !== 'post') {
+    return next();
+  }
+  // XXX check hash
+  console.log("HOOK", req.body);
+});
 
 // XXX this is for testing, remove
 Meteor.methods({
-  syncIssue: function (options) {
+  resyncAllIssues: function (options) {
     var f = new Future;
-    syncIssue(options, f.resolver());
+    resyncAllIssues(options, f.resolver());
     return f.wait();
   }
 });
+

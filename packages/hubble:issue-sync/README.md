@@ -44,7 +44,6 @@ Issue:
   - createdAt: Date (from String)
   - closedAt: Date (from String)
   - updatedAt: Date (from String)
-- issueEtag
 - snoozes: Array of Object
   - when: Date
   - login
@@ -58,7 +57,3 @@ Issue:
     - user: User
     - createdAt: Date (from String)
     - updatedAt: Date (from String)
-- lastMessage: Object
-  - timestamp: created_at (for creation) or comment created_at (for comment) or githubble-generated timestamp (for snooze)
-  - userId: Number
-  - type: 'created'/'commented'/'snoozed'

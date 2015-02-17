@@ -11,12 +11,13 @@ Package.describe({
 });
 
 Npm.depends({
-  github: '0.2.3'
+  github: '0.2.3',
+  async: '0.9.0',
+  connect: '2.9.0'  // XXX should be able to get this from webapp
 });
 
 Package.onUse(function(api) {
-  api.use('check');
-  api.use('mongo');
+  api.use(['check', 'mongo', 'webapp', 'underscore']);
   api.addFiles('server.js', 'server');
   api.addFiles('hubble:issue-sync.js');
 });

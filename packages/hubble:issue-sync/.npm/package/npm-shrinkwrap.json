@@ -1,5 +1,84 @@
 {
   "dependencies": {
+    "async": {
+      "version": "0.9.0"
+    },
+    "connect": {
+      "version": "2.9.0",
+      "dependencies": {
+        "qs": {
+          "version": "0.6.5"
+        },
+        "cookie-signature": {
+          "version": "1.0.1"
+        },
+        "buffer-crc32": {
+          "version": "0.2.1"
+        },
+        "cookie": {
+          "version": "0.1.0"
+        },
+        "send": {
+          "version": "0.1.4",
+          "dependencies": {
+            "mime": {
+              "version": "1.2.11"
+            },
+            "range-parser": {
+              "version": "0.0.4"
+            }
+          }
+        },
+        "bytes": {
+          "version": "0.2.0"
+        },
+        "fresh": {
+          "version": "0.2.0"
+        },
+        "pause": {
+          "version": "0.0.1"
+        },
+        "uid2": {
+          "version": "0.0.2"
+        },
+        "debug": {
+          "version": "2.1.1",
+          "dependencies": {
+            "ms": {
+              "version": "0.6.2"
+            }
+          }
+        },
+        "methods": {
+          "version": "0.0.1"
+        },
+        "multiparty": {
+          "version": "2.1.8",
+          "dependencies": {
+            "readable-stream": {
+              "version": "1.0.33",
+              "dependencies": {
+                "core-util-is": {
+                  "version": "1.0.1"
+                },
+                "isarray": {
+                  "version": "0.0.1"
+                },
+                "string_decoder": {
+                  "version": "0.10.31"
+                },
+                "inherits": {
+                  "version": "2.0.1"
+                }
+              }
+            },
+            "stream-counter": {
+              "version": "0.1.0"
+            }
+          }
+        }
+      }
+    },
     "github": {
       "version": "0.2.3"
     }
