@@ -19,6 +19,7 @@ Package.onUse(function(api) {
   api.use('mongo');
   api.addFiles('server.js', 'server');
   api.addFiles('hubble:issue-sync.js');
+  api.export('Issues');
 });
 
 Package.onTest(function(api) {
