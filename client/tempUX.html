@@ -1,0 +1,34 @@
+<template name="tempUX">
+  <div class="container-fluid row main">
+    <div class="buffer"> </div>
+    <div class="col-md-1"> </div>
+    <div class="col-md-10">
+      {{> currentIssues }}
+   </div>
+   <div class="col-md-1"> </div>
+  </div>
+</template>
+
+<template name="currentIssues">
+  <div class="container-fluid">
+    {{#if issues}}
+       <div class="alert alert-danger" role="alert"> Attention! Issues. </div>
+    {{else}}
+       <div class="alert alert-success" role="alert"> GITORY FOR THE GIT GODS </div>
+    {{/if}}
+    {{#each issues}}
+     {{> issue}}
+    {{/each}}
+  </div>
+</template>
+
+<template name="issue">
+  <div class="container-fluid panel panel-info">
+    <div class="col-md-2">
+      <img src="{{issueDocument.user.avatarUrl}}" class="avatar">
+    </div>
+    <div class="col-md-10">
+     {{issueDocument.title}}
+    </div>
+  </div>
+</template>

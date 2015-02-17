@@ -1,0 +1,15 @@
+.avatar {
+    height: 50px;
+    width: 50px;
+    padding: 2px;
+}
+
+.main {
+  width: 100vw;
+  height: 100vh;
+  background: #000055;
+}
+
+.buffer {
+  height: 3em;
+}
