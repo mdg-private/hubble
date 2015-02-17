@@ -1,7 +1,7 @@
 Template.currentIssues.helpers({
   issues: function () {
     return Issues.find({
-        "issueDocument.closedAt": null,
+        "issueDocument.open": true,
         "issueDocument.hasProjectLabel": false
     }, { $sort: { "lastMessage.timestamp": 1 } });
   }
@@ -10,7 +10,7 @@ Template.currentIssues.helpers({
 Template.labeledIssues.helpers({
   issues: function () {
     return Issues.find({
-        "issueDocument.closedAt": null,
+        "issueDocument.open": true,
         "issueDocument.hasProjectLabel": true
     }, { $sort: { "lastMessage.timestamp": 1 } });
   }
