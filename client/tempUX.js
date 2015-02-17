@@ -3,7 +3,7 @@ Template.currentIssues.helpers({
     return Issues.find({
         "issueDocument.open": true,
         "issueDocument.hasProjectLabel": false
-    }, { $sort: { "lastMessage.timestamp": 1 } });
+    }, { $sort: { "issueDocument.updatedAt": -1 } });
   }
 });
 
@@ -12,6 +12,6 @@ Template.labeledIssues.helpers({
     return Issues.find({
         "issueDocument.open": true,
         "issueDocument.hasProjectLabel": true
-    }, { $sort: { "lastMessage.timestamp": 1 } });
+    }, { $sort: { "issueDocument.updatedAt": -1 } });
   }
 });
