@@ -19,3 +19,7 @@
   padding: 1px;
   border: 4px solid white;
 }
+
+.issue {
+  cursor: pointer;
+}

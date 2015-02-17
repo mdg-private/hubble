@@ -25,7 +25,8 @@
 </template>
 
 <template name="issue">
-  <div class="container-fluid panel panel-info">
+  <a target="_blank" href="{{issueDocument.htmlUrl}}">
+  <div class="container-fluid panel panel-info issue">
     <div class="col-md-2">
       <img src="{{issueDocument.user.avatarUrl}}" class="avatar">
     </div>
@@ -36,6 +37,7 @@
      {{/each}}
     </div>
   </div>
+  </a>
 </template>
 
 
