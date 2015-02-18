@@ -19,5 +19,8 @@
 }
 
 body {
-  background: #003;
+  background-image: url(theme.jpg);
+
 }
+
+.stretch { min-width:100%; min-height:100%; width:auto; height:auto; }
