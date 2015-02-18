@@ -8,8 +8,7 @@ if (Meteor.isClient) {
     return Issues.find({
       repoOwner: repoOwner,
       repoName: repoName,
-      'issueDocument.open': true,
-      'issueDocument.hasProjectLabel': false
-    });
+      'issueDocument.open': true
+    }, { limit: 10 });
   });
 }
