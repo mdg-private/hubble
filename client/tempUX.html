@@ -24,21 +24,31 @@
 </template>
 
 <template name="issue">
-  <a target="_blank" href="{{issueDocument.htmlUrl}}">
-  <div class="container-fluid panel panel-info issue">
-    <div class="col-md-2">
-      <img src="{{issueDocument.user.avatarUrl}}" class="avatar">
+  {{# with issueDocument }}
+    <a target="_blank" href="{{htmlUrl}}">
+    <div class="container-fluid panel panel-info issue">
+      <div class="col-md-2">
+        {{> user}}
+      </div>
+      <div class="col-md-10">
+       {{title}} <br>
+       {{#each labels}}
+         <div class="label" style="background:#{{color}}"> {{name}} </div>
+       {{/each}}
+      </div>
     </div>
-    <div class="col-md-10">
-     {{issueDocument.title}} <br>
-     {{#each issueDocument.labels}}
-       <div class="label" style="background:#{{color}}"> {{name}} </div>
-     {{/each}}
-    </div>
-  </div>
-  </a>
+    </a>
+  {{/with}}
 </template>
 
+<template name="user">
+    <div class="user">
+        <a href="{{ user.htmlUrl }}">
+            <img src="{{user.avatarUrl}}" class="avatar">
+            <p>{{ user.login }}</p>
+        </a>
+    </div>
+</template>
 
 <template name="labeledIssues">
   <div class="container-fluid">
