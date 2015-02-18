@@ -1,0 +1,52 @@
+<template name="issue">
+  <div class="issue">
+
+  <div class="container-fluid issue-stripe" style="background-color:#{{statusColor}}">
+    <div class="status">
+      {{status}}
+    </div>
+    <div class="issue-labels">
+     {{#each nonProjectLabels}}
+       {{> label}}
+     {{/each}}
+     </div>
+  </div>
+
+  <div class="container-fluid issue-body">
+    {{# with issueDocument }}
+       {{> user}}
+     {{/with}}
+
+
+      <a target="_blank" href="{{issueDocument.htmlUrl}}">
+      <div class="issue-title">
+          {{issueDocument.title}}
+       </div>
+      </a>
+
+      <div class="issue-label-row">
+      {{#each projectLabels}}
+        {{> label}}
+      {{/each}}
+       </div>
+
+
+      <div class="issue-comments {{displayRecentComments}}">
+         comments <span class="badge ">{{numRecentComments}}</span>
+      </div>
+  </div>
+  {{#if displayRecentComments}}
+     {{> comments}}
+  {{/if}}
+  </div>
+</template>
+
+
+<template name="user">
+    <div class="avatar-wrap">
+        <a href="{{ user.htmlUrl }}">
+            <img src="{{user.avatarUrl}}" class="avatar">
+            <p>{{ user.login }}</p>
+        </a>
+    </div>
+</template>

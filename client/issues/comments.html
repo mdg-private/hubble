@@ -1,0 +1,28 @@
+
+<template name="comments">
+ <div class="comment-view">
+   <div class="comment-box">
+     {{#each comments}}
+       {{> commentText}}
+     {{/each}}
+   </div>
+   <div class="comment-panel container-fluid">
+     <div class="col-md-2">
+      <div class="mute" aria-label="mute">
+        mute
+      </div>
+     </div>
+     <div class="col-md-10">
+      <div class="snooze" aria-label="snooze">
+        snooze
+      </div>
+     </div>
+   </div>
+ </div>
+</template>
+
+
+<template name="commentText">
+  {{{commentHtml}}}
+  <div style="background-color: #000; height:2px; width: 100%; margin: 2em;"> </div>
+</template>

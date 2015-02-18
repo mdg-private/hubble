@@ -1,0 +1,10 @@
+.label {
+  float: left;
+  padding: 3px;
+  margin: 2px;
+  border-radius: 2px;
+  border-size: 2px;
+  border-color: transparent;
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  vertical-align: middle;
+}
