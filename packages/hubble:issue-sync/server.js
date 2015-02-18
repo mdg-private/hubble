@@ -118,6 +118,9 @@ var issueResponseMatcher = Match.ObjectIncluding({
     })
   ],
   assignee: maybeNull(userResponseMatcher),
+  // closed_by does not appear at all in bulk issue lists, only in individual
+  // issue gets. dunno why.
+  closed_by: Match.Optional(maybeNull(userResponseMatcher)),
   comments: Match.Integer,
   milestone: maybeNull(Match.ObjectIncluding({
     url: String,
@@ -177,6 +180,7 @@ var issueResponseToModifier = function (options) {
           return /^Project:/.test(l.name);
         }),
         assignee: i.assignee ? userResponseToObject(i.assignee) : null,
+        closedBy: i.closed_by ? userResponseToObject(i.closed_by) : null,
         commentCount: i.comments,
         milestone: (
           i.milestone ? {
@@ -211,6 +215,27 @@ var saveIssue = function (options, cb) {
   var id = issueMongoId(options.repoOwner,
                         options.repoName,
                         options.issueResponse.number);
+
+  // When we get the issues from repoIssues, they don't contain closed_by. When
+  // we get them from getRepoIssue (used by resyncOneIssue), they do. So if
+  // we're syncing a closed issue and don't already have its closed_by, we go
+  // use resyncOneIssue instead.
+  if (options.issueResponse.closed_at &&
+      ! options.issueResponse.closed_by) {
+    var existing = Issues.findOne(id);
+    var closedAtTimestamp = +(new Date(options.issueResponse.closed_at));
+    if (! (existing && existing.issueDocument && existing.issueDocument.closedAt
+           && (+existing.issueDocument.closedAt) === closedAtTimestamp)) {
+      console.log("Fetching closed_by for " + id);
+      resyncOneIssue({
+        repoOwner: options.repoOwner,
+        repoName: options.repoName,
+        number: options.issueResponse.number
+      }, cb);
+      return;
+    }
+  }
+
   var mod = issueResponseToModifier(
     _.pick(options, 'repoOwner', 'repoName', 'issueResponse'));
 
@@ -374,6 +399,23 @@ WebApp.connectHandlers.use('/webhook/issues', Meteor.bindEnvironment(function (r
     issueResponse: req.body.issue
   }, respond);
 }));
+
+// XXX rewerite to allow multiple repos
+var cronjob = function () {
+  resyncAllIssues({
+    repoOwner: 'meteor',
+    repoName: 'meteor'
+  }, function (err) {
+    if (err) {
+      console.error("Error in cronjob: " + err.stack);
+    }
+    console.log("Done cronjob");
+    // Full resync every 20 minutes, and on startup.  (Webhook does the trick
+    // otherwise.)
+    Meteor.setTimeout(cronjob, 1000 * 60 * 20);
+  });
+};
+Meteor.startup(cronjob);
 
 // XXX this is for testing, remove
 Meteor.methods({
