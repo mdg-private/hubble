@@ -119,7 +119,8 @@ var issueResponseMatcher = Match.ObjectIncluding({
   ],
   assignee: maybeNull(userResponseMatcher),
   // closed_by does not appear at all in bulk issue lists, only in individual
-  // issue gets. dunno why.
+  // issue gets. dunno why.  Also it is null if the closing user is a deleted
+  // user.
   closed_by: Match.Optional(maybeNull(userResponseMatcher)),
   comments: Match.Integer,
   milestone: maybeNull(Match.ObjectIncluding({
@@ -220,8 +221,11 @@ var saveIssue = function (options, cb) {
   // we get them from getRepoIssue (used by resyncOneIssue), they do. So if
   // we're syncing a closed issue and don't already have its closed_by, we go
   // use resyncOneIssue instead.
+  //
+  // (Note that sometimes closed_by exists and is null, if the closing user is a
+  // deleted ("ghost") user. See eg #1976.)
   if (options.issueResponse.closed_at &&
-      ! options.issueResponse.closed_by) {
+      ! _.has(options.issueResponse, 'closed_by')) {
     var existing = Issues.findOne(id);
     var closedAtTimestamp = +(new Date(options.issueResponse.closed_at));
     if (! (existing && existing.issueDocument && existing.issueDocument.closedAt
