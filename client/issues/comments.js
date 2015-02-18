@@ -5,7 +5,19 @@ Template.comments.helpers({
 });
 
 Template.commentText.helpers({
-  commentHtml: function () {
+  commentMarkdown: function () {
     return this.text;
   },
+});
+
+
+Template.comments.events({
+  "click .snooze": function () {
+    // snooze this;
+    Session.set(displayId(this), false);
+  },
+  "click .mute": function () {
+    // mute this;
+    Session.set(displayId(this), false);
+  }
 });

@@ -23,6 +23,7 @@
 
 
 <template name="commentText">
-  {{{commentHtml}}}
+  {{#markdown}}I am using __markdown__.{{/markdown}}
+  {{#markdown}} {{commentMarkdown}} {{/markdown}}
   <div style="background-color: #000; height:2px; width: 100%; margin: 2em;"> </div>
 </template>

@@ -31,9 +31,6 @@ var startsWithProject = function (label) {
   return label.name.match(/^Project:/g);
 };
 
-var displayId = function (issue) {
-  return "displayRecentComments:" + issue._id;
-};
 
 Template.issue.events({
   'click .issue-comments': function () {
