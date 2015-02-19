@@ -38,7 +38,14 @@ Meteor.methods({
     }
 
     check(login, String);
-    TeamMembers.remove({ login: login });
+    var f = new Future;
+    async.series([
+      function (cb) {
+        TeamMembers.remove({ login: login }, cb);
+      },
+      P.reclassifyAllIssues
+    ], f.resolver());
+    f.wait();
   }
 });
 
@@ -63,6 +70,9 @@ var addTeamMember = function (login, active, cb) {
         },
         { upsert: true },
         cb);
+    },
+    function (result, cb) {
+      P.reclassifyAllIssues(cb);
     }
   ], cb);
 };

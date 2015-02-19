@@ -2,17 +2,6 @@
 
 var async = Npm.require('async');
 
-var classifyIssue = function (options, cb) {
-  if (P.asyncErrorCheck(options, {
-    repoOwner: String,
-    repoName: String,
-    number: Match.Integer
-  }, cb)) return;
-
-  var id = P.issueMongoId(options.repoOwner, options.repoName, options.number);
-  classifyIssueById(id, cb);
-};
-
 var classifyIssueById = function (id, cb) {
   if (P.asyncErrorCheck(id, String, cb)) return;
   var doc = Issues.findOne(id);
@@ -24,15 +13,6 @@ var classifyIssueById = function (id, cb) {
 
   var mod = classificationModifier(doc);
   Issues.update(id, mod, cb);
-};
-
-// XXX temporary
-var classifyAllIssues = function (cb) {
-  var ids = Issues.find({}, { fields: { _id: 1 } }).fetch();
-  var async = Npm.require('async');
-  async.each(ids, function (doc, cb) {
-    classifyIssueById(doc._id, cb);
-  }, cb);
 };
 
 // XXX implement msSpentInNew #18
@@ -149,6 +129,17 @@ P.needsClassification = function (id, cb) {
     id, { $max: { enqueued: +(new Date) } }, { upsert: true }, cb);
 };
 
+P.reclassifyAllIssues = function (cb) {
+  console.log("Reclassifying all issues!");
+  var ids = Issues.find({}, { fields: { _id: 1 } }).fetch();
+  var async = Npm.require('async');
+  // XXX bulk insert!!!
+  var when = +(new Date);
+  async.each(ids, function (doc, cb) {
+    ClassificationQueue.insert({_id: doc._id, enqueued: when}, cb);
+  }, cb);
+};
+
 // Classifies everything currently in the queue. Result is a bool saying whether
 // anything was seen.
 var classifyCurrentQueue = function (cb) {
@@ -212,19 +203,3 @@ var classifyForever = function () {
 };
 
 Meteor.startup(classifyForever);
-
-// XXX remove temp method
-Meteor.methods({
-  classifyIssue: function (options) {
-    var Future = Npm.require('fibers/future');
-    var f = new Future;
-    classifyIssue(options, f.resolver());
-    f.wait();
-  },
-  classifyAllIssues: function () {
-    var Future = Npm.require('fibers/future');
-    var f = new Future;
-    classifyAllIssues(f.resolver());
-    f.wait();
-  }
-});
