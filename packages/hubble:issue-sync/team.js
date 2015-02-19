@@ -11,7 +11,7 @@ var TeamMembers = P.newCollection('teamMembers');
 
 P.asyncMethod('addTeamMember', function (login, active, cb) {
   var self = this;
-  P.async.series([
+  P.asyncVoidSeries([
     function (cb) {
       // You need to be logged in (which requires you to be one of these users)
       // unless you are trying to add the first user;
@@ -29,7 +29,7 @@ P.asyncMethod('addTeamMember', function (login, active, cb) {
 
 P.asyncMethod('removeTeamMember', function (login, cb) {
   var self = this;
-  P.async.series([
+  P.asyncVoidSeries([
     function (cb) {
       cb(self.userId ? null : new Meteor.Error("Not allowed"));
     },

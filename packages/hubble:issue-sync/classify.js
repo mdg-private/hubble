@@ -143,7 +143,7 @@ var classifyCurrentQueue = function (cb) {
   console.log("Starting to classify");
   var queue = ClassificationQueue.find().fetch();
   P.async.each(queue, function (queued, cb) {
-    P.async.series([
+    P.asyncVoidSeries([
       function (cb) {
         classifyIssueById(queued._id, cb);
       },

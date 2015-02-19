@@ -1,7 +1,3 @@
-// P is the only non-export package-local. Other things that would be
-// package-local will go on it.
-P = {};
-
 // -------------------
 // MONGO CONFIGURATION
 // -------------------
