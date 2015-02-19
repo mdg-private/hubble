@@ -1,4 +1,3 @@
-var Future = Npm.require('fibers/future');
 var async = Npm.require('async');
 
 
@@ -32,109 +31,12 @@ var syncedToMongoId = function (repoOwner, repoName, which) {
 };
 
 
-
-
-// -------------
-// TYPE-CHECKING
-// -------------
-
-// Usage:
-//   if (asyncCheck(v, p, cb)) return;
-var asyncCheck = function (value, pattern, cb) {
-  try {
-    check(value, pattern);
-  } catch (e) {
-    if (! (e instanceof Match.Error))
-      throw e;
-    console.log("FAILED CHECK", value)
-    cb(e);
-    return true;
-  }
-  return false;
-};
-
-var maybeNull = function (pattern) {
-  return Match.OneOf(null, pattern);
-};
-
-var timestampMatcher = Match.Where(function (ts) {
-  check(ts, String);
-  return ts.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
-});
-
-var userResponseMatcher = Match.ObjectIncluding({
-  login: String,
-  id: Match.Integer,
-  url: String,
-  avatar_url: String,
-  html_url: String
-});
-
-var issueResponseMatcher = Match.ObjectIncluding({
-  id: Match.Integer,
-  url: String,
-  html_url: String,
-  number: Match.Integer,
-  state: Match.OneOf('open', 'closed'),
-  title: String,
-  body: String,
-  user: userResponseMatcher,
-  labels: [
-    Match.ObjectIncluding({
-      url: String,
-      name: String,
-      color: String
-    })
-  ],
-  assignee: maybeNull(userResponseMatcher),
-  // closed_by does not appear at all in bulk issue lists, only in individual
-  // issue gets. dunno why.  Also it is null if the closing user is a deleted
-  // user.
-  closed_by: Match.Optional(maybeNull(userResponseMatcher)),
-  comments: Match.Integer,
-  milestone: maybeNull(Match.ObjectIncluding({
-    url: String,
-    number: Number,
-    state: Match.OneOf('open', 'closed'),
-    title: String,
-    description: maybeNull(String)
-  })),
-  pull_request: Match.Optional({  // not maybeNull!
-    url: String,
-    diff_url: String,
-    html_url: String,
-    patch_url: String
-  }),
-  created_at: timestampMatcher,
-  closed_at: maybeNull(timestampMatcher),
-  updated_at: timestampMatcher
-});
-
-var commentResponseMatcher = Match.ObjectIncluding({
-  id: Match.Integer,
-  url: String,
-  html_url: String,
-  issue_url: String,  // we parse this but don't save it
-  body: String,
-  user: userResponseMatcher,
-  created_at: timestampMatcher,
-  updated_at: timestampMatcher
-});
-
-var repositoryResponseMatcher = Match.ObjectIncluding({
-  owner: Match.ObjectIncluding({
-    login: String
-  }),
-  name: String
-});
-
-
 // -------------------------------------------
 // CONVERTING FROM GITHUB SCHEMA TO OUR SCHEMA
 // -------------------------------------------
 
 var userResponseToObject = function (userResponse) {
-  check(userResponse, userResponseMatcher);
+  check(userResponse, P.Match.User);
   return {
     login: userResponse.login,
     id: userResponse.id,
@@ -148,7 +50,7 @@ var issueResponseToModifier = function (options) {
   check(options, {
     repoOwner: String,
     repoName: String,
-    issueResponse: issueResponseMatcher
+    issueResponse: P.Match.Issue
   });
 
   var i = options.issueResponse;
@@ -208,7 +110,7 @@ var commentResponseToModifier = function (options) {
   check(options, {
     repoOwner: String,
     repoName: String,
-    commentResponse: commentResponseMatcher
+    commentResponse: P.Match.Comment
   });
 
   var c = options.commentResponse;
@@ -236,10 +138,10 @@ var commentResponseToModifier = function (options) {
 var MAX_PER_PAGE = 100;
 
 var saveIssue = function (options, cb) {
-  if (asyncCheck(options, {
+  if (P.asyncErrorCheck(options, {
     repoOwner: String,
     repoName: String,
-    issueResponse: issueResponseMatcher
+    issueResponse: P.Match.Issue
   }, cb)) return;
 
   var id = issueMongoId(options.repoOwner,
@@ -284,10 +186,10 @@ var saveIssue = function (options, cb) {
 
 // Saves a page of issues.
 var saveOnePageOfIssues = function (options, cb) {
-  if (asyncCheck(options, {
+  if (P.asyncErrorCheck(options, {
     repoOwner: String,
     repoName: String,
-    issueResponses: [issueResponseMatcher]
+    issueResponses: [P.Match.Issue]
   }, cb)) return;
 
   var issues = options.issueResponses;
@@ -309,7 +211,7 @@ var saveOnePageOfIssues = function (options, cb) {
 };
 
 var resyncOneIssue = function (options, cb) {
-  if (asyncCheck(options, {
+  if (P.asyncErrorCheck(options, {
     repoOwner: String,
     repoName: String,
     number: Match.Integer
@@ -342,7 +244,7 @@ var resyncOneIssue = function (options, cb) {
 // don't appear to change the updated_at timestamp, so they won't get detected
 // by this.  Ah well.
 var resyncAllIssues = function (options, cb) {
-  if (asyncCheck(options, {
+  if (P.asyncErrorCheck(options, {
     repoOwner: String,
     repoName: String
   }, cb)) return;
@@ -385,10 +287,10 @@ var resyncAllIssues = function (options, cb) {
 };
 
 var saveComment = function (options, cb) {
-  if (asyncCheck(options, {
+  if (P.asyncErrorCheck(options, {
     repoOwner: String,
     repoName: String,
-    commentResponse: commentResponseMatcher
+    commentResponse: P.Match.Comment
   }, cb)) return;
 
   var comment = options.commentResponse;
@@ -422,10 +324,10 @@ var saveComment = function (options, cb) {
 
 // Saves a page of comments.
 var saveOnePageOfComments = function (options, cb) {
-  if (asyncCheck(options, {
+  if (P.asyncErrorCheck(options, {
     repoOwner: String,
     repoName: String,
-    commentResponses: [commentResponseMatcher]
+    commentResponses: [P.Match.Comment]
   }, cb)) return;
 
   var comments = options.commentResponses;
@@ -447,7 +349,7 @@ var saveOnePageOfComments = function (options, cb) {
 // to the beginning of time, because all changes we care about update the
 // updated_at date.
 var syncAllComments = function (options, cb) {
-  if (asyncCheck(options, {
+  if (P.asyncErrorCheck(options, {
     repoOwner: String,
     repoName: String
   }, cb)) return;
@@ -533,9 +435,9 @@ var webhookComplain = function (err) {
 P.webhook.on('error', webhookComplain);
 
 P.webhook.on('issues', Meteor.bindEnvironment(function (event) {
-  if (asyncCheck(event.payload, Match.ObjectIncluding({
-    issue: issueResponseMatcher,
-    repository: repositoryResponseMatcher
+  if (P.asyncErrorCheck(event.payload, Match.ObjectIncluding({
+    issue: P.Match.Issue,
+    repository: P.Match.Repository
   }), webhookComplain)) return;
 
   saveIssue({
@@ -546,11 +448,11 @@ P.webhook.on('issues', Meteor.bindEnvironment(function (event) {
 }));
 
 P.webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
-  if (asyncCheck(event.payload, Match.ObjectIncluding({
+  if (P.asyncErrorCheck(event.payload, Match.ObjectIncluding({
     pull_request: Match.ObjectIncluding({
       number: Match.Integer
     }),
-    repository: repositoryResponseMatcher
+    repository: P.Match.Repository
   }), webhookComplain)) return;
 
   // Unfortunately, the pull_request event inexplicably does not
@@ -564,9 +466,9 @@ P.webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
 }));
 
 P.webhook.on('issue_comment', Meteor.bindEnvironment(function (event) {
-  if (asyncCheck(event.payload, Match.ObjectIncluding({
-    comment: commentResponseMatcher,
-    repository: repositoryResponseMatcher
+  if (P.asyncErrorCheck(event.payload, Match.ObjectIncluding({
+    comment: P.Match.Comment,
+    repository: P.Match.Repository
   }), webhookComplain)) return;
 
   saveComment({
@@ -596,7 +498,7 @@ var issueCronjob = function () {
     Meteor.setTimeout(issueCronjob, 1000 * 60 * 20);
   });
 };
-Meteor.startup(issueCronjob);
+//Meteor.startup(issueCronjob);
 
 // XXX rewrite to allow multiple repos
 var commentCronjob = function () {

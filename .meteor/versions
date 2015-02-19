@@ -1,3 +1,9 @@
+accounts-base@1.1.4-githubble.43
+accounts-github@1.0.4-githubble.43
+accounts-oauth@1.1.4-githubble.43
+accounts-ui@1.1.5-githubble.43
+accounts-ui-unstyled@1.1.6-githubble.43
+audit-argument-checks@1.0.3-githubble.43
 autoupdate@1.1.6-githubble.43
 base64@1.0.3-githubble.43
 binary-heap@1.0.3-githubble.43
@@ -11,6 +17,7 @@ deps@1.0.7-githubble.43
 ejson@1.0.6-githubble.43
 fastclick@1.0.3-githubble.43
 geojson-utils@1.0.3-githubble.43
+github@1.1.3-githubble.43
 html-tools@1.0.3-githubble.43
 htmljs@1.0.4-githubble.43
 http@1.0.10-githubble.43
@@ -27,7 +34,9 @@ iron:url@1.0.7
 jquery@1.11.3-githubble.43_1
 json@1.0.3-githubble.43
 launch-screen@1.0.1-githubble.43
+less@1.0.13-githubble.43
 livedata@1.0.13-githubble.43
+localstorage@1.0.3-githubble.43
 logging@1.0.6-githubble.43
 markdown@1.0.4-githubble.43
 meteor@1.1.5-githubble.43
@@ -36,6 +45,8 @@ minifiers@1.1.4-githubble.43
 minimongo@1.0.7-githubble.43
 mobile-status-bar@1.0.3-githubble.43
 mongo@1.0.12-githubble.43
+oauth@1.1.4-githubble.43
+oauth2@1.1.3-githubble.43
 observe-sequence@1.0.5-githubble.43
 ordered-dict@1.0.3-githubble.43
 random@1.0.3-githubble.43
@@ -44,6 +55,7 @@ reactive-var@1.0.5-githubble.43
 reload@1.1.3-githubble.43
 retry@1.0.3-githubble.43
 routepolicy@1.0.4-githubble.43
+service-configuration@1.0.4-githubble.43
 session@1.0.6-githubble.43
 spacebars@1.0.5-githubble.43
 spacebars-compiler@1.0.5-githubble.43
