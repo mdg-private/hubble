@@ -157,6 +157,7 @@ var commentResponseMatcher = Match.ObjectIncluding({
   id: Match.Integer,
   url: String,
   html_url: String,
+  issue_url: String,  // we parse this but don't save it
   body: String,
   user: userResponseMatcher,
   created_at: timestampMatcher,
@@ -615,6 +616,19 @@ webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
     repoOwner: event.payload.repository.owner.login,
     repoName: event.payload.repository.name,
     number: event.payload.pull_request.number
+  }, webhookComplain);
+}));
+
+webhook.on('issue_comment', Meteor.bindEnvironment(function (event) {
+  if (asyncCheck(event.payload, Match.ObjectIncluding({
+    comment: commentResponseMatcher,
+    repository: repositoryResponseMatcher
+  }), webhookComplain)) return;
+
+  saveComment({
+    repoOwner: event.payload.repository.owner.login,
+    repoName: event.payload.repository.name,
+    commentResponse: event.payload.comment
   }, webhookComplain);
 }));
 
