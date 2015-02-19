@@ -117,7 +117,6 @@ var classifyIssueById = function (id, cb) {
   Issues.update(id, mod, cb);
 };
 
-// XXX implement msSpentInNew #18
 var classificationModifier = function (doc) {
   if (! doc.issueDocument) {
     // We don't actually have issue metadata (eg, we have comments but no
@@ -126,7 +125,8 @@ var classificationModifier = function (doc) {
       $set: {
         status: 'mystery',
         recentComments: {},
-        recentCommentsCount: 0
+        recentCommentsCount: 0,
+        msSpentInNew: null
       }
     };
   }
@@ -152,9 +152,10 @@ var classificationModifier = function (doc) {
   var teamOpener = IsTeamMember(doc.issueDocument.user.id);
 
   // Did a team member comment on it at all?
-  var teamCommented = _.any(comments, function (comment) {
+  var firstTeamComment = _.find(comments, function (comment) {
     return IsTeamMember(comment.user.id);
   });
+  var teamCommented = !! firstTeamComment;
 
   // Has the issue been explicitly marked as highly active?
   var highlyActive = !! doc.highlyActive;
@@ -213,11 +214,23 @@ var classificationModifier = function (doc) {
     status = 'stirring';
   }
 
+  var msSpentInNew = null;
+  if (status !== 'new') {
+    if (teamOpener) {
+      msSpentInNew = 0;
+    } else if (fastClose) {
+      msSpentInNew = doc.issueDocument.closedAt - doc.issueDocument.createdAt;
+    } else {
+      msSpentInNew = firstTeamComment.createdAt - doc.issueDocument.createdAt;
+    }
+  }
+
   return {
     $set: {
       status: status,
       recentComments: recentComments,
-      recentCommentsCount: _.size(recentComments)
+      recentCommentsCount: _.size(recentComments),
+      msSpentInNew: msSpentInNew
     }
   };
 };
