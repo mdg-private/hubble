@@ -10,6 +10,6 @@ if (Meteor.isClient) {
       repoName: repoName,
       'issueDocument.open': true,
       'issueDocument.hasProjectLabel': false
-    }, { limit: 10 });
+    }, { limit: 100 });
   });
 }

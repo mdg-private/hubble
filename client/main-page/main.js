@@ -6,25 +6,57 @@ Template.issueNav.helpers({
     // We don't want to know the number of closed issues.
     if (this.tag === "closed") return 0;
     // Otherwise, return how many issues we have.
-    return Issues.find({ status: this.tag }).count();
+    var finder = { status: this.tag };
+    // XXX: HAX
+    if (Session.get("labelFilter")) {
+      _.extend(finder,
+        { "issueDocument.labels.name":
+          { $regex: ".*" + Session.get("labelFilter") + ".*" }
+        });
+    }
+    return Issues.find(finder).count();
   },
+  filter: function () {
+   var me =  document.getElementById("tag-search");
+   return (me && me.value) || Session.get("labelFilter");
+  }
 });
 
 Template.viewIssues.helpers({
   issues: function () {
     var selectedStates = _.pluck(States.find({ selected: true }).fetch(), 'tag');
-    return Issues.find({
-      "issueDocument.open": true,
-      "status": { $in: selectedStates }
-    }, { $sort: { "issueDocument.updatedAt": -1 } });
+    var finder = { };
+    if (! _.isEmpty(selectedStates)) {
+      _.extend(finder, { "status": {$in: selectedStates }});
+    }
+    if (Session.get("labelFilter")) {
+      _.extend(finder,
+        { "issueDocument.labels.name":
+          { $regex: ".*" + Session.get("labelFilter") + ".*" }
+        });
+    }
+    return Issues.find(finder, { $sort: { "issueDocument.updatedAt": -1 } });
   }
 });
 
 Template.issueNav.events({
   'click .state-button' : function () {
     States.update(this._id, { $set: { selected: !this.selected }});
-  }
+  },
+  'click .search-button' : function () {
+    filterByTag(document.getElementById("tag-search").value);
+  },
+  'keyup #tag-search': function (evt, template) {
+    // We were going to filter on enter (we need to check that evt.which ===
+    // 13), but then, this is kind of cool?
+    filterByTag(document.getElementById("tag-search").value);
+  },
 });
+
+filterByTag = function (tag) {
+  console.log("set", tag);
+  Session.set("labelFilter", tag);
+};
 
 States = new Mongo.Collection(null);
 Meteor.startup(function () {
