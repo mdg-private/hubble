@@ -7,11 +7,7 @@ Accounts.validateLoginAttempt(function (info) {
     })
   }));
 
-  var teamMember = TeamMembers.findOne(""+info.user.services.github.id);
-  if (! teamMember) {
-    throw new Meteor.Error(400, "Only team members may log in");
-  }
-  if (! teamMember.active) {
+  if (! IsActiveTeamMember(info.user.services.github.id)) {
     throw new Meteor.Error(400, "Only active team members may log in");
   }
 

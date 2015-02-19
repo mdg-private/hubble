@@ -16,7 +16,7 @@ async.setImmediate = function (fn) {
 // - active: bool (active means "can log in and use this site",
 //   inactive just means "their comments count as team member comments";
 //   in the future this could be extended to date ranges of comments counting)
-TeamMembers = P.newCollection('teamMembers');
+var TeamMembers = P.newCollection('teamMembers');
 
 Meteor.methods({
   addTeamMember: function (login, active) {
@@ -65,4 +65,27 @@ var addTeamMember = function (login, active, cb) {
         cb);
     }
   ], cb);
+};
+
+// map id -> active
+var MEMBERS_BY_ID = {};
+
+TeamMembers.find().observe({
+  added: function (doc) {
+    MEMBERS_BY_ID[doc._id] = doc.active;
+  },
+  changed: function (doc) {
+    MEMBERS_BY_ID[doc._id] = doc.active;
+  },
+  removed: function (oldDoc) {
+    delete MEMBERS_BY_ID[oldDoc._id];
+  }
+});
+
+IsTeamMember = function (id) {
+  return _.has(MEMBERS_BY_ID, ""+id);
+};
+
+IsActiveTeamMember = function (id) {
+  return _.has(MEMBERS_BY_ID, ""+id) && MEMBERS_BY_ID[""+id];
 };

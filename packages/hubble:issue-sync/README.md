@@ -41,7 +41,7 @@ Issue:
     - diffUrl: String
     - htmlUrl: String
     - patchUrl: String
-  - closedBy: optional User  // XXX not implemented
+  - closedBy: optional User
   - createdAt: Date (from String)
   - closedAt: Date (from String)
   - updatedAt: Date (from String)
@@ -66,18 +66,18 @@ Issue:
 - recentCommentsCount*: Number
 - msSpentInNew*: Number
 - status*:
-  - MYSTERY -- we've recorded comments for this but we haven't recorded
+  - mystery -- we've recorded comments for this but we haven't recorded
     issue metadata. (Probably never publish these!)
-  - NEW -- no MDG opener/commenter and not
+  - new -- no MDG opener/commenter and not
     (closed-and-only-commented-on-by-original-user)
-  - STIRRING -- exists at least one MDG opener/comment, closed, and last
+  - stirring -- exists at least one MDG opener/comment, closed, and last
     opener/comment/snooze is non-MDG, and not highlyActive
-  - ACTIVE -- exists at least one MDG opener/comment, open, and last
+  - active -- exists at least one MDG opener/comment, open, and last
     opener/comment/snooze is non-MDG, and not highlyActive
-  - HIGHLY ACTIVE -- exists at least one MDG opener/comment and has highlyActive set
-  - TRIAGED -- exists at least one MDG opener/comment, and last opener/comment/snooze
+  - highly-active -- exists at least one MDG opener/comment and has highlyActive set
+  - triaged -- exists at least one MDG opener/comment, and last opener/comment/snooze
     is MDG, and open, and not highlyActive
-  - CLOSED -- closed and not highlyActive and either
+  - closed -- closed and not highlyActive and either
     (closed-and-only-commented-on-by-original-user) or the last opener/comment/snooze is MDG
 
 `*` means "derived deterministically from other values on the document (plus

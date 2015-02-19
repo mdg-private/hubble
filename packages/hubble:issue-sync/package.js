@@ -18,11 +18,11 @@ Npm.depends({
 
 Package.onUse(function(api) {
   api.use(['check', 'mongo', 'webapp', 'underscore']);
-  api.addFiles(['config_server.js', 'match.js', 'sync_server.js', 'team.js'],
-               'server');
+  api.addFiles(['config_server.js', 'match.js', 'sync_server.js', 'team.js',
+                'classify.js'], 'server');
   api.addFiles('client.js', 'client');
   api.export('Issues');
-  api.export('TeamMembers', 'server');
+  api.export(['IsTeamMember', 'IsActiveTeamMember'], 'server');
 });
 
 Package.onTest(function(api) {

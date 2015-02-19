@@ -12,7 +12,7 @@ Issues._ensureIndex({
 });
 // XXX more indices?
 
-var issueMongoId = function (repoOwner, repoName, number) {
+P.issueMongoId = function (repoOwner, repoName, number) {
   check(repoOwner, String);
   check(repoName, String);
   check(number, Match.Integer);
@@ -71,7 +71,7 @@ var issueResponseToModifier = function (options) {
         labels: _.map(i.labels, function (l) {
           return _.pick(l, 'url', 'name', 'color');
         }),
-        hasProjectLabel: !!_.find(i.labels, function (l) {
+        hasProjectLabel: _.any(i.labels, function (l) {
           return /^Project:/.test(l.name);
         }),
         assignee: i.assignee ? userResponseToObject(i.assignee) : null,
@@ -144,9 +144,9 @@ var saveIssue = function (options, cb) {
     issueResponse: P.Match.Issue
   }, cb)) return;
 
-  var id = issueMongoId(options.repoOwner,
-                        options.repoName,
-                        options.issueResponse.number);
+  var id = P.issueMongoId(options.repoOwner,
+                          options.repoName,
+                          options.issueResponse.number);
 
   // When we get the issues from repoIssues, they don't contain closed_by. When
   // we get them from getRepoIssue (used by resyncOneIssue), they do. So if
@@ -303,7 +303,8 @@ var saveComment = function (options, cb) {
   }
   var issueNumber = +issueUrlMatch[1];
 
-  var issueId = issueMongoId(options.repoOwner, options.repoName, issueNumber);
+  var issueId = P.issueMongoId(
+    options.repoOwner, options.repoName, issueNumber);
 
   var mod = commentResponseToModifier(
     _.pick(options, 'repoOwner', 'repoName', 'commentResponse'));
@@ -498,7 +499,7 @@ var issueCronjob = function () {
     Meteor.setTimeout(issueCronjob, 1000 * 60 * 20);
   });
 };
-//Meteor.startup(issueCronjob);
+Meteor.startup(issueCronjob);
 
 // XXX rewrite to allow multiple repos
 var commentCronjob = function () {
