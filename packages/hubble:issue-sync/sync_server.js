@@ -55,7 +55,7 @@ var issueResponseToModifier = function (options) {
 
   var i = options.issueResponse;
 
-  return {
+  var mod = {
     $set: {
       repoOwner: options.repoOwner,
       repoName: options.repoName,
@@ -75,7 +75,6 @@ var issueResponseToModifier = function (options) {
           return /^Project:/.test(l.name);
         }),
         assignee: i.assignee ? userResponseToObject(i.assignee) : null,
-        closedBy: i.closed_by ? userResponseToObject(i.closed_by) : null,
         commentCount: i.comments,
         milestone: (
           i.milestone ? {
@@ -98,6 +97,14 @@ var issueResponseToModifier = function (options) {
       }
     }
   };
+
+  // Only set closedBy if we were actually given one (null or not).
+  if (_.has(i, 'closed_by')) {
+    mod.$set.issueDocument.closedBy =
+      i.closed_by ? userResponseToObject(i.closed_by) : null;
+  }
+
+  return mod;
 };
 
 // With this key, comments in the comments map will be sorted in chronological
@@ -159,7 +166,10 @@ var saveIssue = function (options, cb) {
       ! _.has(options.issueResponse, 'closed_by')) {
     var existing = Issues.findOne(id);
     var closedAtTimestamp = +(new Date(options.issueResponse.closed_at));
-    if (! (existing && existing.issueDocument && existing.issueDocument.closedAt
+    if (! (existing
+           && existing.issueDocument
+           && _.has(existing.issueDocument, 'closedBy')
+           && existing.issueDocument.closedAt
            && (+existing.issueDocument.closedAt) === closedAtTimestamp)) {
       console.log("Fetching closed_by for " + id);
       resyncOneIssue({
