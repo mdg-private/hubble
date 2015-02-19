@@ -551,17 +551,6 @@ var syncAllComments = function (options, cb) {
   github.issues.repoComments(query, receivePageOfComments);
 };
 
-
-(function () {
-  var token = Meteor.settings.githubToken || process.env.GITHUB_TOKEN;
-  if (token) {
-    github.authenticate({
-      type: 'token',
-      token: token
-    });
-  }
-})();
-
 // The secret is a random string that you generate (eg, `openssl rand -hex 20`)
 // and set when you set up the webhook. Always set it in production (via
 // settings in lastpass), and generally set it while testing too --- otherwise
