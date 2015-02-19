@@ -3,8 +3,21 @@
    <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->
     <div class="navbar-header">
-      <a class="navbar-brand" href="#">GitHubble</a>
+      <div class="logo">
+          {{> logo }}
+      </div>
+      <a class="navbar-brand" href="#">
+        GitHubble</a>
     </div>
   </div>
  </nav>
+</template>
+
+
+<template name="logo">
+  <svg height="40" width="40">
+    {{#each circles}}
+      <circle cx="{{x}}" cy="{{y}}" r="{{r}}" stroke="white" stroke-width="2" fill="black" />
+    {{/each}}
+  </svg>
 </template>

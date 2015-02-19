@@ -14,4 +14,9 @@
 }
 .navbar-custom .navbar-brand {
     color:#eeeeee;
+    float: left;
+}
+
+.logo {
+    float: left;
 }
