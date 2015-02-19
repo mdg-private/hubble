@@ -2,9 +2,6 @@ Template.issueNav.helpers({
   states: function () {
     return States.find({}, { sort: { urgency: -1 }});
    },
-  selected: function () {
-    return Session.get(selectedState(this.tag));
-  },
   numIssues: function () {
     // We don't want to know the number of closed issues.
     if (this.tag === "closed") return 0;
@@ -15,21 +12,19 @@ Template.issueNav.helpers({
 
 Template.viewIssues.helpers({
   issues: function () {
+    var selectedStates = _.pluck(States.find({ selected: true }).fetch(), 'tag');
     return Issues.find({
-        "issueDocument.open": true
+      "issueDocument.open": true,
+      "status": { $in: selectedStates }
     }, { $sort: { "issueDocument.updatedAt": -1 } });
   }
 });
 
 Template.issueNav.events({
   'click .state-button' : function () {
-    Session.set(selectedState(this.tag), ! Session.get(selectedState(this.tag)));
+    States.update(this._id, { $set: { selected: !this.selected }});
   }
 });
-
-var selectedState = function (tag) {
-  return "selectedState:" + tag;
-};
 
 States = new Mongo.Collection(null);
 Meteor.startup(function () {
