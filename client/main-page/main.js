@@ -6,7 +6,7 @@ Template.issueNav.helpers({
     // We don't want to know the number of closed issues.
     if (this.tag === "closed") return 0;
     // Otherwise, return how many issues we have.
-    return Issues.find({ state: this.tag }).count();
+    return Issues.find({ status: this.tag }).count();
   },
 });
 

@@ -112,3 +112,8 @@
   background: linear-gradient(to right, #345, #446);
   color: #eef;
 }
+
+.issue-number {
+  width: 6em;
+  font-weight: bold;
+}
