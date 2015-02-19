@@ -1,9 +1,11 @@
 Template.issue.helpers({
   "statusColor" : function () {
-    return "33aa55";
+    var mytag = this.status || "highly-active";
+    return States.findOne({ tag: mytag }).color;
   },
   "status": function () {
-    return "Triaged";
+    var mytag = this.status || "active";
+    return States.findOne({ tag: mytag }).name;
   },
   // XXX: I wish there was an easier way to filter this w/o doing extra work.
   "nonProjectLabels": function () {

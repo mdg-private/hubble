@@ -18,6 +18,9 @@
     {{#each states}}
       <div class="state-button {{selected}}" style="background-color:#{{color}}">
         {{name}}
+        {{#if numIssues}}
+           ({{numIssues}})
+        {{/if}}
       </div>
     {{/each}}
      </div>
@@ -30,5 +33,4 @@
       </span>
     </div>
   </div>
-
 </template>

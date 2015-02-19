@@ -31,9 +31,11 @@
        </div>
 
 
-      <div class="issue-comments {{displayRecentComments}}">
-         comments <span class="badge ">{{numRecentComments}}</span>
-      </div>
+      {{#if numRecentComments}}
+       <div class="issue-comments {{displayRecentComments}}">
+          comments <span class="badge ">{{numRecentComments}}</span>
+       </div>
+      {{/if}}
   </div>
   {{#if displayRecentComments}}
      {{> comments}}

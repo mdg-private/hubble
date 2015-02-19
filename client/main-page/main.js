@@ -4,14 +4,19 @@ Template.issueNav.helpers({
    },
   selected: function () {
     return Session.get(selectedState(this.tag));
-  }
+  },
+  numIssues: function () {
+    // We don't want to know the number of closed issues.
+    if (this.tag === "closed") return 0;
+    // Otherwise, return how many issues we have.
+    return Issues.find({ state: this.tag }).count();
+  },
 });
 
 Template.viewIssues.helpers({
   issues: function () {
     return Issues.find({
-        "issueDocument.open": true,
-        "issueDocument.hasProjectLabel": true
+        "issueDocument.open": true
     }, { $sort: { "issueDocument.updatedAt": -1 } });
   }
 });
