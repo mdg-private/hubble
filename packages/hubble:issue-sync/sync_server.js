@@ -503,12 +503,16 @@ P.webhook.on('issue_comment', Meteor.bindEnvironment(function (event) {
 // CRONJOBS
 // --------
 
+// When running locally, sync hubble by default. Note that this is just about
+// the cronjob; anything you set up with webhooks will be accepted.
+var REPO_TO_SYNC = Meteor.settings.sync
+      ? _.pick(Meteor.settings.sync, 'repoOwner', 'repoName')
+      : { repoOwner: 'meteor', repoName: 'hubble' };
+
+
 // XXX rewrite to allow multiple repos
 var issueCronjob = function () {
-  resyncAllIssues({
-    repoOwner: 'meteor',
-    repoName: 'meteor'
-  }, function (err) {
+  resyncAllIssues(REPO_TO_SYNC, function (err) {
     if (err) {
       console.error("Error in issue cronjob: " + err.stack);
     }
@@ -522,10 +526,7 @@ Meteor.startup(issueCronjob);
 
 // XXX rewrite to allow multiple repos
 var commentCronjob = function () {
-  syncAllComments({
-    repoOwner: 'meteor',
-    repoName: 'meteor'
-  }, function (err) {
+  syncAllComments(REPO_TO_SYNC, function (err) {
     if (err) {
       console.error("Error in comment cronjob: " + err.stack);
     }
