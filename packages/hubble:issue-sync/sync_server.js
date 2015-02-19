@@ -59,48 +59,47 @@ var issueResponseToModifier = function (options) {
     $set: {
       repoOwner: options.repoOwner,
       repoName: options.repoName,
-      issueDocument: {
-        id: i.id,
-        url: i.url,
-        htmlUrl: i.html_url,
-        number: i.number,
-        open: (i.state === 'open'),
-        title: i.title,
-        body: i.body,
-        user: userResponseToObject(i.user),
-        labels: _.map(i.labels, function (l) {
-          return _.pick(l, 'url', 'name', 'color');
-        }),
-        hasProjectLabel: _.any(i.labels, function (l) {
-          return /^Project:/.test(l.name);
-        }),
-        assignee: i.assignee ? userResponseToObject(i.assignee) : null,
-        commentCount: i.comments,
-        milestone: (
-          i.milestone ? {
-            url: i.milestone.url,
-            number: i.milestone.number,
-            open: (i.milestone.state === 'open'),
-            title: i.milestone.title,
-            description: i.milestone.description
-          } : null),
-        pullRequest: (
-          i.pull_request ? {
-            url: i.pull_request.url,
-            diffUrl: i.pull_request.diff_url,
-            htmlUrl: i.pull_request.html_url,
-            patchUrl: i.pull_request.patch_url
-          } : null),
-        createdAt: new Date(i.created_at),
-        closedAt: i.closed_at ? new Date(i.closed_at) : null,
-        updatedAt: new Date(i.updated_at)
-      }
+      'issueDocument.id': i.id,
+      'issueDocument.url': i.url,
+      'issueDocument.htmlUrl': i.html_url,
+      'issueDocument.number': i.number,
+      'issueDocument.open': (i.state === 'open'),
+      'issueDocument.title': i.title,
+      'issueDocument.body': i.body,
+      'issueDocument.user': userResponseToObject(i.user),
+      'issueDocument.labels': _.map(i.labels, function (l) {
+        return _.pick(l, 'url', 'name', 'color');
+      }),
+      'issueDocument.hasProjectLabel': _.any(i.labels, function (l) {
+        return /^Project:/.test(l.name);
+      }),
+      'issueDocument.assignee': (
+        i.assignee ? userResponseToObject(i.assignee) : null),
+      'issueDocument.commentCount': i.comments,
+      'issueDocument.milestone': (
+        i.milestone ? {
+          url: i.milestone.url,
+          number: i.milestone.number,
+          open: (i.milestone.state === 'open'),
+          title: i.milestone.title,
+          description: i.milestone.description
+        } : null),
+      'issueDocument.pullRequest': (
+        i.pull_request ? {
+          url: i.pull_request.url,
+          diffUrl: i.pull_request.diff_url,
+          htmlUrl: i.pull_request.html_url,
+          patchUrl: i.pull_request.patch_url
+        } : null),
+      'issueDocument.createdAt': new Date(i.created_at),
+      'issueDocument.closedAt': i.closed_at ? new Date(i.closed_at) : null,
+      'issueDocument.updatedAt': new Date(i.updated_at)
     }
   };
 
   // Only set closedBy if we were actually given one (null or not).
   if (_.has(i, 'closed_by')) {
-    mod.$set.issueDocument.closedBy =
+    mod.$set['issueDocument.closedBy'] =
       i.closed_by ? userResponseToObject(i.closed_by) : null;
   }
 
