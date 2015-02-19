@@ -47,7 +47,8 @@ Issue:
   - updatedAt: Date (from String)
 - snoozes: Array of Object
   - when: Date
-  - login
+  - login: String
+  - id: Number (github user id)
 - highlyActive: Boolean
 - highlyActiveToggleDates: [Date] (push when toggled)
 - comments: Map

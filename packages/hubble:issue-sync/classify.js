@@ -1,5 +1,56 @@
 // Classify issues by status.
 
+// --------------------------------------
+// ACTIONS THAT CAN AFFECT CLASSIFICATION
+// --------------------------------------
+
+P.asyncMethod('snooze', function (options, cb) {
+  var mongoId;
+
+  P.asyncVoidSeries([
+    P.requireLoggedIn,
+    _.partial(P.asyncCheck, options, Match.ObjectIncluding({
+      repoOwner: String,
+      repoName: String,
+      number: Match.Integer
+    })),
+    function (cb) {
+      mongoId = P.issueMongoId(
+        options.repoOwner, options.repoName, options.number);
+      if (! Issues.findOne(mongoId)) {
+        cb(new Meteor.Error(404, "No such issue"));
+        return;
+      }
+      var user = new Meteor.user();
+      if (P.asyncErrorCheck(user, Match.ObjectIncluding({
+        services: Match.ObjectIncluding({
+          github: Match.ObjectIncluding({
+            id: Match.Integer,
+            username: String
+          })
+        })
+      }))) return;
+
+      Issues.update(mongoId, {
+        $push: {
+          snoozes: {
+            when: new Date,
+            login: user.services.github.username,
+            id: user.services.github.id
+          }
+        }
+      }, cb);
+    },
+    function (cb) {
+      P.needsClassification(mongoId, cb);
+    }
+  ], cb);
+});
+
+// ------------------------
+// CLASSIFICATION ALGORITHM
+// ------------------------
+
 var classifyIssueById = function (id, cb) {
   if (P.asyncErrorCheck(id, String, cb)) return;
   var doc = Issues.findOne(id);
@@ -27,7 +78,11 @@ var classificationModifier = function (doc) {
     };
   }
 
-  // "recent" means "since last team member"
+  // When was the last snooze (or null if none)?
+  var lastSnoozeDate =
+        _.isEmpty(doc.snoozes) ? null : _.max(_.pluck(doc.snoozes, 'when'));
+
+  // "recent" means "since last team member commented or snoozed"
   var recentComments = {};
   var comments = [];
   _.each(_.keys(doc.comments || {}).sort(), function (key) {
@@ -35,7 +90,7 @@ var classificationModifier = function (doc) {
     comments.push(comment);
     if (IsTeamMember(comment.user.id)) {
       recentComments = {};
-    } else {
+    } else if (! lastSnoozeDate || comment.createdAt > lastSnoozeDate) {
       recentComments[key] = comment;
     }
   });
@@ -51,17 +106,23 @@ var classificationModifier = function (doc) {
   // Has the issue been explicitly marked as highly active?
   var highlyActive = !! doc.highlyActive;
 
+  // What was the last comment (or null)?
+  var lastComment = _.isEmpty(comments) ? null : _.last(comments);
+
   // Was the last comment by a team member?
-  var lastCommentWasTeam =
-        ! _.isEmpty(comments) && IsTeamMember(_.last(comments).user.id);
+  var lastCommentWasTeam = lastComment && IsTeamMember(lastComment.user.id);
 
   // Was the last publicly visible action by a team member?
   var lastPublicActionWasTeam = lastCommentWasTeam ||
         (teamOpener && _.isEmpty(comments));
 
-  // Was the last action (including snooze) by a team member?
-  // XXX implement snooze #19
-  var lastActionWasTeam = lastPublicActionWasTeam;
+  // Was the last action (including snooze) by a team member?  (This only gets
+  // you out of 'new' if it was a public action, but it can get you out of
+  // active/stirring into triaged/closed.)
+  var lastActionWasTeam = (
+    lastPublicActionWasTeam ||
+      (lastSnoozeDate &&
+       (! lastComment || lastSnoozeDate > lastComment.createdAt)));
 
   // Is it currently open?
   var open = doc.issueDocument.open;
@@ -121,7 +182,7 @@ var ClassificationQueue = P.newCollection('classificationQueue');
 P.needsClassification = function (id, cb) {
   if (P.asyncErrorCheck(id, String, cb)) return;
 
-  console.log("NEEDS CLASSIFICATION", id)
+  console.log("Needs classification:", id);
 
   ClassificationQueue.update(
     id, { $max: { enqueued: +(new Date) } }, { upsert: true }, cb);

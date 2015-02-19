@@ -30,9 +30,7 @@ P.asyncMethod('addTeamMember', function (login, active, cb) {
 P.asyncMethod('removeTeamMember', function (login, cb) {
   var self = this;
   P.asyncVoidSeries([
-    function (cb) {
-      cb(self.userId ? null : new Meteor.Error("Not allowed"));
-    },
+    P.requireLoggedIn,
     _.partial(P.asyncCheck, login, String),
     function (cb) {
       TeamMembers.remove({ login: login }, cb);
