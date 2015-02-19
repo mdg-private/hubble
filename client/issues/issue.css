@@ -1,0 +1,114 @@
+/* The entire box */
+.issue {
+   margin: 2em;
+}
+
+/* Top stripe of the issue */
+.issue-stripe {
+  height: 1.5em;
+  margin: 0em;
+  padding: 0.1em;
+  border-top-left-radius: 0.5em;
+  border-top-right-radius: 0.5em;
+}
+
+/* Status displayed in the top stripe */
+.status {
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  font-size: 95%;
+  color: #efe;
+  float: left;
+  border-top-width: 2px;
+  border-style: solid;
+  border-color: transparent;
+  vertical-align: middle;
+}
+
+/* Non-project labels in the top stripe */
+.issue-labels {
+  vertical-align: middle;
+  margin-right: 10px;
+  float: right;
+}
+
+/* Main issue body */
+.issue-body {
+  cursor: pointer;
+  background-color: #fff;
+  border-top: 4px;
+  border-left: 4px;
+  border-right: 0px;
+  border-bottom: 0px;
+  border-style: solid;
+  border-color: white;
+  padding: 0px;
+  margin: 0px;
+  position: relative;
+  border-bottom-left-radius:  0.5em;
+  border-bottom-right-radius: 0.5em;
+  box-shadow: 1px 5px 5px #333;
+}
+
+/* Title in the issue body */
+.issue-title {
+  padding: 0.5em;
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+
+.issue-label-row {
+  vertical-align: middle;
+  margin-right: 10px;
+  float: left;
+}
+
+/* avatar */
+.avatar {
+  height: 50px;
+  width: 50px;
+  padding: 2px;
+}
+.avatar-wrap {
+  margin: 5px;
+  float: left;
+  width: 75px;
+}
+
+/* comments */
+.issue-comments {
+  cursor: pointer;
+  float: right;
+
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  background: linear-gradient(to right, #eee, #eef);
+  color: #001;
+  width: 10em;
+  font-weight: bold;
+  text-align: center;
+
+  margin: 0em;
+  padding: 0.5em;
+
+  box-shadow: 1px 5px 5px #222;
+  border-bottom-right-radius: 0.5em;
+
+  height: 2.5em;
+
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+
+.issue-comments.true{
+  background: linear-gradient(to right, #345, #446);
+  color: #eef;
+}
+
+.issue-comments.true:hover{
+  background: linear-gradient(to right, #eee, #eef);
+}
+
+.issue-comments:hover {
+  background: linear-gradient(to right, #345, #446);
+  color: #eef;
+}

@@ -1,0 +1,49 @@
+.comment-view {
+   width: 95%;
+   margin-left: 3em;
+   background-color: #F5F6CE;
+   border-bottom-right-radius: 1em;
+   border-bottom-left-radius: 1em;
+   box-shadow: 5px 5px 5px #000;
+}
+
+.comment-box {
+  padding-top: 3em;
+  padding-right: 3em;
+  padding-left: 1em;
+}
+
+.comment-panel {
+   background-color: #F5F6CE;
+   height: 2.1em;
+   border-bottom-right-radius: 1em;
+   border-bottom-left-radius: 1em;
+   box-shadow: 5px 5px 5px #000;
+}
+
+.mute {
+   background: linear-gradient(to right, #FEDFC0,  #F8ECE0);
+   margin: 2px;
+   padding: 2px;
+   text-align: center;
+   box-shadow: 1px 5px 5px #222;
+   cursor: pointer;
+}
+
+.mute:hover {
+   background: linear-gradient(to right, #E8CCC0, #EEBFA0);
+}
+
+.snooze {
+   background: linear-gradient(to right, #F8ECE0, #FEDFC0);
+   text-align: center;
+   margin: 2px;
+   padding: 2px;
+   box-shadow: 1px 5px 5px #222;
+   cursor: pointer;
+}
+
+
+.snooze:hover {
+   background: linear-gradient(to right, #E8CCC0, #EEBFA0);
+}

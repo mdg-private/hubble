@@ -1,0 +1,44 @@
+.background-maker {
+    background:
+       linear-gradient(to right,
+                       rgba(0,0,200,0.1),
+                       rgba(0,0,200,0.3),
+                       rgba(0,0,200,0.1));
+}
+
+/* state buttons! */
+.state-nav {
+    background:  rgba(0,0,200,0.2);
+    border: 2px solid black;
+    padding: 1em;
+    color: #ddf;
+    font-weight: bolder;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+
+input {
+   color: #000;
+}
+
+.state-button {
+    border: 2px solid black;
+    padding: 1em;
+    border-radius: 1em;
+    float: left;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+
+.state-button.true {
+    border: 2px solid blue;
+    padding: 1em;
+    border-radius: 1em;
+    float: left;
+    opacity: 1.0;
+}
+
+/* search for a tag */
+.tag-search {
+    float: right;
+}

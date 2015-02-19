@@ -1,0 +1,32 @@
+
+<template name="labeledIssues">
+  <div class="container-fluid background-maker">
+    {{> issueNav}}
+
+    {{#each issues}}
+     {{> issue}}
+    {{/each}}
+  </div>
+</template>
+
+
+
+<template name="issueNav">
+
+  <div class="container-fluid state-nav">
+    <div class="state-button-row">
+    {{#each states}}
+      <div class="state-button {{selected}}" style="background-color:#{{color}}">
+        {{name}}
+      </div>
+    {{/each}}
+     </div>
+
+    <div class="tag-search">
+      Filter by tags containing: <br>
+      <input type="text" name="search" value="bob">
+      <span class="glyphicon glyphicon-search"> </span>
+    </div>
+  </div>
+
+</template>
