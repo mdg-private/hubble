@@ -15,35 +15,68 @@
 
 .comment-panel {
    background-color: #F5F6CE;
-   height: 2.1em;
+   height: 3em;
+   margin: 0px;
+   padding: 0px;
    border-bottom-right-radius: 1em;
    border-bottom-left-radius: 1em;
    box-shadow: 5px 5px 5px #000;
 }
 
-.highly-active {
-   background: linear-gradient(to right, #FEDFC0,  #F8ECE0);
+.comment-panel-button {
    margin: 2px;
-   padding: 2px;
+   padding-top: 0.5em;
+   padding-bottom: 0.5em;
+   padding-right: 1em;
+   padding-left: 1em;
    text-align: center;
    box-shadow: 1px 5px 5px #222;
    cursor: pointer;
+   width:100%;
+   font-weight: bold;
+   font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 
-.mute:hover {
-   background: linear-gradient(to right, #E8CCC0, #EEBFA0);
+.highly-active {
+   background: linear-gradient(to right, #F8DCC7, #EEE3D7);
+   position: absolute;
+   left: -2px;
+   bottom: -3em;
+   border-bottom-left-radius: 1em;
+}
+
+.highly-active:hover {
+   background: linear-gradient(to right, #FE2EF7, #D095FA);
 }
 
 .snooze {
-   background: linear-gradient(to right, #F8ECE0, #FEDFC0);
-   text-align: center;
-   margin: 2px;
-   padding: 2px;
-   box-shadow: 1px 5px 5px #222;
-   cursor: pointer;
+   background: linear-gradient(to right, #EEE3D7, #D5E7D3);
+   position: absolute;
+   right: -2px;
+   bottom: -3em;
 }
 
 
 .snooze:hover {
-   background: linear-gradient(to right, #E8CCC0, #EEBFA0);
+   background: linear-gradient(to right,  #D095FA, #57AAE9);
+}
+
+.respond {
+   background: linear-gradient(to right, #D5E7D3, #D5F3C0);
+   border-bottom-right-radius: 1em;
+   position: absolute;
+   right: -2px;
+   bottom: -3em;
+}
+
+
+.respond:hover {
+   background: linear-gradient(to right, #57AAE9, #57E98A);
+}
+
+.respond a:link { color: #000; }
+.respond a:visited { color: #000; }
+
+.comment {
+  padding-top: 1em;
 }

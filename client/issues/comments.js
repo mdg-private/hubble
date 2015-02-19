@@ -1,7 +1,9 @@
 Template.comments.helpers({
   comments: function () {
-console.log(this.comments);
     return _.values(this.comments);
+  },
+  url: function () {
+    return this.issueDocument.htmlUrl;
   }
 });
 
@@ -10,9 +12,11 @@ Template.commentText.helpers({
     return this.body;
   },
   color: function () {
-console.log(getCommentColor(this.id));
     return getCommentColor(this.id);
-  }
+  },
+  url: function () {
+    return this.htmlUrl;
+  },
 });
 
 
@@ -27,12 +31,11 @@ Template.comments.events({
   }
 });
 
-// Get a semi-random color for the comment. Surely there is a better way to do
-// this!
+var nextColor = 0;
+// Get alternating colors for comments.
 var getCommentColor = function (seed) {
   var colors =
-    ["F5F6D1", "F5F8CE", "F7F6CE",
-     "F3F6CD", "F5F3CE", "F5F6CC"];
-
-  return colors[seed % colors.length];
+    ["F8F4C3", "F8F9DF"];
+  nextColor = (nextColor + 1) % colors.length;
+  return colors[nextColor];
 };
