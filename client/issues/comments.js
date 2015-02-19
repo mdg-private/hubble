@@ -21,7 +21,7 @@ Template.comments.events({
     // snooze this;
     Session.set(displayId(this), false);
   },
-  "click .mute": function () {
+  "click .highly-active": function () {
     // mute this;
     Session.set(displayId(this), false);
   }
