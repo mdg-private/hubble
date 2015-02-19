@@ -1,7 +1,5 @@
 // Classify issues by status.
 
-var async = Npm.require('async');
-
 var classifyIssueById = function (id, cb) {
   if (P.asyncErrorCheck(id, String, cb)) return;
   var doc = Issues.findOne(id);
@@ -132,10 +130,9 @@ P.needsClassification = function (id, cb) {
 P.reclassifyAllIssues = function (cb) {
   console.log("Reclassifying all issues!");
   var ids = Issues.find({}, { fields: { _id: 1 } }).fetch();
-  var async = Npm.require('async');
   // XXX bulk insert!!!
   var when = +(new Date);
-  async.each(ids, function (doc, cb) {
+  P.async.each(ids, function (doc, cb) {
     ClassificationQueue.insert({_id: doc._id, enqueued: when}, cb);
   }, cb);
 };
@@ -145,8 +142,8 @@ P.reclassifyAllIssues = function (cb) {
 var classifyCurrentQueue = function (cb) {
   console.log("Starting to classify");
   var queue = ClassificationQueue.find().fetch();
-  async.each(queue, function (queued, cb) {
-    async.series([
+  P.async.each(queue, function (queued, cb) {
+    P.async.series([
       function (cb) {
         classifyIssueById(queued._id, cb);
       },

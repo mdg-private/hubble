@@ -1,14 +1,5 @@
 // Manage a list of team members.
 
-var Future = Npm.require('fibers/future');
-var async = Npm.require('async');
-
-// Need this to enable async.waterfall.
-var savedAsyncSetImmediate = async.setImmediate;
-async.setImmediate = function (fn) {
-  savedAsyncSetImmediate(Meteor.bindEnvironment(fn));
-};
-
 
 // Documents are of the form:
 // - _id: Stringified numerical id
@@ -18,39 +9,40 @@ async.setImmediate = function (fn) {
 //   in the future this could be extended to date ranges of comments counting)
 var TeamMembers = P.newCollection('teamMembers');
 
-Meteor.methods({
-  addTeamMember: function (login, active) {
-    // You need to be logged in (which requires you to be one of these users)
-    // unless you are trying to add the first user;
-    if (! this.userId && TeamMembers.findOne()) {
-      throw new Meteor.Error("Not allowed");
-    }
+P.asyncMethod('addTeamMember', function (login, active, cb) {
+  var self = this;
+  P.async.series([
+    function (cb) {
+      // You need to be logged in (which requires you to be one of these users)
+      // unless you are trying to add the first user;
+      if (! self.userId && TeamMembers.findOne()) {
+        cb(new Meteor.Error("Not allowed"));
+      } else {
+        cb();
+      }
+    },
+    _.partial(P.asyncCheck, login, String),
+    _.partial(P.asyncCheck, active, Boolean),
+    _.partial(addTeamMember, login, active)
+  ], cb);
+});
 
-    check(login, String);
-    check(active, Boolean);
-    var f = new Future;
-    addTeamMember(login, active, f.resolver());
-    f.wait();
-  },
-  removeTeamMember: function (login) {
-    if (! this.userId) {
-      throw new Meteor.Error("Not allowed");
-    }
-
-    check(login, String);
-    var f = new Future;
-    async.series([
-      function (cb) {
-        TeamMembers.remove({ login: login }, cb);
-      },
-      P.reclassifyAllIssues
-    ], f.resolver());
-    f.wait();
-  }
+P.asyncMethod('removeTeamMember', function (login, cb) {
+  var self = this;
+  P.async.series([
+    function (cb) {
+      cb(self.userId ? null : new Meteor.Error("Not allowed"));
+    },
+    _.partial(P.asyncCheck, login, String),
+    function (cb) {
+      TeamMembers.remove({ login: login }, cb);
+    },
+    P.reclassifyAllIssues
+  ], cb);
 });
 
 var addTeamMember = function (login, active, cb) {
-  async.waterfall([
+  P.async.waterfall([
     function (cb) {
       P.github.user.getFrom({ user: login }, P.githubify(cb));
     },

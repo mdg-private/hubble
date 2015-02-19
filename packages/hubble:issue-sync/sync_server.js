@@ -1,6 +1,3 @@
-var async = Npm.require('async');
-
-
 // -----------
 // MONGO SETUP
 // -----------
@@ -183,7 +180,7 @@ var saveIssue = function (options, cb) {
   var mod = issueResponseToModifier(
     _.pick(options, 'repoOwner', 'repoName', 'issueResponse'));
 
-  async.waterfall([
+  P.async.waterfall([
     function (cb) {
       // Specifying _id explicitly means we avoid fake upsert.  fullResult lets
       // us check nModified.
@@ -217,7 +214,7 @@ var saveOnePageOfIssues = function (options, cb) {
   console.log("Saving " + issues.length + " issues for " +
               options.repoOwner + "/" + options.repoName + ": " +
               JSON.stringify(_.pluck(issues, 'number')));
-  async.each(issues, function (issueResponse, cb) {
+  P.async.each(issues, function (issueResponse, cb) {
     saveIssue({
       repoOwner: options.repoOwner,
       repoName: options.repoName,
@@ -325,7 +322,7 @@ var saveComment = function (options, cb) {
   var mod = commentResponseToModifier(
     _.pick(options, 'repoOwner', 'repoName', 'commentResponse'));
 
-  async.waterfall([
+  P.async.waterfall([
     function (cb) {
       Issues.update({
         // Specifying _id explicitly means we avoid fake upsert.
@@ -359,7 +356,7 @@ var saveOnePageOfComments = function (options, cb) {
     throw Error("empty page?");
   }
 
-  async.each(comments, function (commentResponse, cb) {
+  P.async.each(comments, function (commentResponse, cb) {
     saveComment({
       repoOwner: options.repoOwner,
       repoName: options.repoName,
