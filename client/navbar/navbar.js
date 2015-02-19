@@ -7,3 +7,25 @@ Template.logo.helpers({
     ];
   }
 });
+
+Template.navbar.helpers({
+  fullpermalink: function () {
+    return "http://githubble.meteor.com" + compileLink();
+  },
+  smallpermalink: function () {
+    return compileLink();
+  }
+});
+
+compileLink = function () {
+  var url = "";
+  if (States.findOne({ selected: true })) {
+    var selected = States.find({ selected: true }).fetch();
+    var statesStr = _.pluck(selected, "tag").join("&");
+    url += "/states/" + statesStr;
+  }
+  if (Session.get("labelFilter")) {
+    url += "/filter/" + Session.get("labelFilter");
+  }
+  return url;
+};

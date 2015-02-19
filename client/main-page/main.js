@@ -42,14 +42,17 @@ Template.viewIssues.helpers({
 Template.issueNav.events({
   'click .state-button' : function () {
     States.update(this._id, { $set: { selected: !this.selected }});
+    Router.go(compileLink());
   },
   'click .search-button' : function () {
     filterByTag(document.getElementById("tag-search").value);
+    Router.go(compileLink());
   },
   'keyup #tag-search': function (evt, template) {
     // We were going to filter on enter (we need to check that evt.which ===
     // 13), but then, this is kind of cool?
     filterByTag(document.getElementById("tag-search").value);
+    Router.go(compileLink());
   },
 });
 

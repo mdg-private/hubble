@@ -4,7 +4,7 @@ Router.configure({
 
 Router.route('/', function () {
   this.layout("hello");
-  this.render("tempUX");
+  this.render("generic");
 });
 
 var setTag = function (tag) {

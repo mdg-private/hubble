@@ -1,8 +1,9 @@
 .navbar-custom {
     background-color:#000022;
-    color:#000;
+    color:#fff;
     border-radius:0;
     padding: 0px;
+    position: relative;
 }
 
 .navbar-custom .navbar-nav > li > a {
@@ -14,9 +15,17 @@
 }
 .navbar-custom .navbar-brand {
     color:#eeeeee;
+    position: absolute;
     float: left;
 }
 
 .logo {
     float: left;
+}
+
+.linkme{
+    position: absolute;
+    top: 0;
+    right: 15px;
+    color: #2C53BD;
 }
