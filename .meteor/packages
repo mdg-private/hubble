@@ -12,3 +12,4 @@ iron:router
 accounts-ui
 accounts-github
 audit-argument-checks
+force-ssl
