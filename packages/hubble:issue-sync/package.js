@@ -13,7 +13,7 @@ Package.describe({
 Npm.depends({
   github: '0.2.3',
   async: '0.9.0',
-  connect: '2.9.0'  // XXX should be able to get this from webapp
+  'github-webhook-handler': 'https://github.com/meteor/github-webhook-handler/tarball/76879a0f2e5eaaa0ba3cbc54715de23a0b3f9984'
 });
 
 Package.onUse(function(api) {

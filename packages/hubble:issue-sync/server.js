@@ -1,6 +1,7 @@
 var Future = Npm.require('fibers/future');
 var githubModule = Npm.require('github');
 var githubError = Npm.require('github/error');
+var githubWebhookHandler = Npm.require('github-webhook-handler');
 var async = Npm.require('async');
 
 var driver;
@@ -15,7 +16,7 @@ if (Meteor.settings.mongo) {
 }
 
 // Usage:
-//   if (! asyncCheck(v, p, cb)) return;
+//   if (asyncCheck(v, p, cb)) return;
 var asyncCheck = function (value, pattern, cb) {
   try {
     check(value, pattern);
@@ -24,9 +25,9 @@ var asyncCheck = function (value, pattern, cb) {
       throw e;
     console.log("FAILED CHECK", value)
     cb(e);
-    return false;
+    return true;
   }
-  return true;
+  return false;
 }
 
 Issues = new Mongo.Collection('issues', { _driver: driver });
@@ -162,6 +163,13 @@ var commentResponseMatcher = Match.ObjectIncluding({
   updated_at: timestampMatcher
 });
 
+var repositoryResponseMatcher = Match.ObjectIncluding({
+  owner: Match.ObjectIncluding({
+    login: String
+  }),
+  name: String
+});
+
 var userResponseToObject = function (userResponse) {
   check(userResponse, userResponseMatcher);
   return {
@@ -257,7 +265,7 @@ var commentResponseToModifier = function (options) {
 };
 
 var saveIssue = function (options, cb) {
-  if (! asyncCheck(options, {
+  if (asyncCheck(options, {
     repoOwner: String,
     repoName: String,
     issueResponse: issueResponseMatcher
@@ -307,7 +315,7 @@ var ISSUES_PER_PAGE = 100;
 
 // Saves a page of issues.
 var saveOnePageOfIssues = function (options, cb) {
-  if (! asyncCheck(options, {
+  if (asyncCheck(options, {
     repoOwner: String,
     repoName: String,
     issueResponses: [issueResponseMatcher]
@@ -332,7 +340,7 @@ var saveOnePageOfIssues = function (options, cb) {
 };
 
 var resyncOneIssue = function (options, cb) {
-  if (! asyncCheck(options, {
+  if (asyncCheck(options, {
     repoOwner: String,
     repoName: String,
     number: Match.Integer
@@ -365,7 +373,7 @@ var resyncOneIssue = function (options, cb) {
 // don't appear to change the updated_at timestamp, so they won't get detected
 // by this.  Ah well.
 var resyncAllIssues = function (options, cb) {
-  if (! asyncCheck(options, {
+  if (asyncCheck(options, {
     repoOwner: String,
     repoName: String
   }, cb)) return;
@@ -408,7 +416,7 @@ var resyncAllIssues = function (options, cb) {
 };
 
 var saveComment = function (options, cb) {
-  if (! asyncCheck(options, {
+  if (asyncCheck(options, {
     repoOwner: String,
     repoName: String,
     commentResponse: commentResponseMatcher
@@ -445,7 +453,7 @@ var saveComment = function (options, cb) {
 
 // Saves a page of comments.
 var saveOnePageOfComments = function (options, cb) {
-  if (! asyncCheck(options, {
+  if (asyncCheck(options, {
     repoOwner: String,
     repoName: String,
     commentResponses: [commentResponseMatcher]
@@ -470,7 +478,7 @@ var saveOnePageOfComments = function (options, cb) {
 // to the beginning of time, because all changes we care about update the
 // updated_at date.
 var syncAllComments = function (options, cb) {
-  if (! asyncCheck(options, {
+  if (asyncCheck(options, {
     repoOwner: String,
     repoName: String
   }, cb)) return;
@@ -542,50 +550,72 @@ var syncAllComments = function (options, cb) {
   github.issues.repoComments(query, receivePageOfComments);
 };
 
-// Unfortunately can't get this from WebAppInternals.
-var myPersonalConnect = Npm.require('connect');
-WebApp.connectHandlers.use('/webhook', myPersonalConnect.json());
-// Register this event on GitHub for issue and pull_request.
-// XXX docs
-WebApp.connectHandlers.use('/webhook/issues', Meteor.bindEnvironment(function (req, res, next) {
+
+(function () {
+  var token = Meteor.settings.githubToken || process.env.GITHUB_TOKEN;
+  if (token) {
+    github.authenticate({
+      type: 'token',
+      token: token
+    });
+  }
+})();
+
+// The secret is a random string that you generate (eg, `openssl rand -hex 20`)
+// and set when you set up the webhook. Always set it in production (via
+// settings in lastpass), and generally set it while testing too --- otherwise
+// random people on the internet can insert stuff into your database!
+var webhook = githubWebhookHandler({
+  secret: (Meteor.settings.githubWebhookSecret ||
+           process.env.GITHUB_WEBHOOK_SECRET)
+});
+
+WebApp.connectHandlers.use('/webhook', Meteor.bindEnvironment(function (req, res, next) {
   if (req.method.toLowerCase() !== 'post') {
     next();
     return;
   }
 
-  var respond = function (err) {
-    if (err) {
-      console.error("Error in issue webhook", err);
-      res.writeHead(500);
-      res.end();
-      return;
-    }
-    res.writeHead(200);
-    res.end();
-  };
+  webhook(req, res);
+}));
 
-  // XXX check hash (eg just use the existing module for this)
-  // XXX error checking (esp on repo owner/name)
-  var issueResponse = null;
-  if (req.body.pull_request) {
-    // Unfortunately, the pull_request event inexplicably does not
-    // contain labels, so we can't trust what we hear over the wire.
-    resyncOneIssue({
-      repoOwner: req.body.repository.owner.login,
-      repoName: req.body.repository.name,
-      number: req.body.pull_request.number
-    }, respond);
-    return;
-  } else if (! req.body.issue) {
-    respond(Error("Missing issue from issue webhook?"));
-    return;
+var webhookComplain = function (err) {
+  if (err) {
+    console.error("Error in webhook:", err);
   }
+};
+
+webhook.on('error', webhookComplain);
+
+webhook.on('issues', Meteor.bindEnvironment(function (event) {
+  if (asyncCheck(event.payload, Match.ObjectIncluding({
+    issue: issueResponseMatcher,
+    repository: repositoryResponseMatcher
+  }), webhookComplain)) return;
 
   saveIssue({
-    repoOwner: req.body.repository.owner.login,
-    repoName: req.body.repository.name,
-    issueResponse: req.body.issue
-  }, respond);
+    repoOwner: event.payload.repository.owner.login,
+    repoName: event.payload.repository.name,
+    issueResponse: event.payload.issue
+  }, webhookComplain);
+}));
+
+webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
+  if (asyncCheck(event.payload, Match.ObjectIncluding({
+    pull_request: Match.ObjectIncluding({
+      number: Match.Integer
+    }),
+    repository: repositoryResponseMatcher
+  }), webhookComplain)) return;
+
+  // Unfortunately, the pull_request event inexplicably does not
+  // contain labels, so we can't trust what we hear over the wire.
+  // Do a full resync instead.
+  resyncOneIssue({
+    repoOwner: event.payload.repository.owner.login,
+    repoName: event.payload.repository.name,
+    number: event.payload.pull_request.number
+  }, webhookComplain);
 }));
 
 // XXX rewrite to allow multiple repos
@@ -603,7 +633,7 @@ var issueCronjob = function () {
     Meteor.setTimeout(issueCronjob, 1000 * 60 * 20);
   });
 };
-// Meteor.startup(issueCronjob);
+Meteor.startup(issueCronjob);
 
 // XXX rewrite to allow multiple repos
 var commentCronjob = function () {
