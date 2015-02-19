@@ -4,6 +4,11 @@ var githubError = Npm.require('github/error');
 var githubWebhookHandler = Npm.require('github-webhook-handler');
 var async = Npm.require('async');
 
+
+// -----------
+// MONGO SETUP
+// -----------
+
 var driver;
 if (Meteor.settings.mongo) {
   driver = new MongoInternals.RemoteCollectionDriver(
@@ -15,27 +20,19 @@ if (Meteor.settings.mongo) {
   driver = MongoInternals.defaultRemoteCollectionDriver();
 }
 
-// Usage:
-//   if (asyncCheck(v, p, cb)) return;
-var asyncCheck = function (value, pattern, cb) {
-  try {
-    check(value, pattern);
-  } catch (e) {
-    if (! (e instanceof Match.Error))
-      throw e;
-    console.log("FAILED CHECK", value)
-    cb(e);
-    return true;
-  }
-  return false;
-}
-
 Issues = new Mongo.Collection('issues', { _driver: driver });
 Issues._ensureIndex({
   repoOwner: 1,
   repoName: 1
 });
 // XXX more indices?
+
+var issueMongoId = function (repoOwner, repoName, number) {
+  check(repoOwner, String);
+  check(repoName, String);
+  check(number, Match.Integer);
+  return repoOwner + '/' + repoName + '#' + number;
+};
 
 
 // id eg 'meteor/meteor#comments'
@@ -48,6 +45,11 @@ var syncedToMongoId = function (repoOwner, repoName, which) {
   return repoOwner + '/' + repoName + '#' + which;
 };
 
+
+// ----------------
+// GITHUB API SETUP
+// ----------------
+
 var github = new githubModule({
   version: '3.0.0',
   debug: !!process.env.GITHUB_API_DEBUG,
@@ -55,6 +57,21 @@ var github = new githubModule({
     "user-agent": "githubble.meteor.com"
   }
 });
+
+(function () {
+  // This is a "personal access token" with NO SCOPES from
+  // https://github.com/settings/applications.  When running locally,
+  // create one through that interface (BUT UNCHECK ALL THE SCOPE BOXES)
+  // and set it in $GITHUB_TOKEN. When running in production, we'll
+  // share one that's in a settings file in lastpass.
+  var token = Meteor.settings.githubToken || process.env.GITHUB_TOKEN;
+  if (token) {
+    github.authenticate({
+      type: 'token',
+      token: token
+    });
+  }
+})();
 
 // For some reason, the errors from the github module don't show up well.
 var fixGithubError = function (e) {
@@ -74,30 +91,32 @@ var githubify = function (callback) {
   });
 };
 
-(function () {
-  // This is a "personal access token" with NO SCOPES from
-  // https://github.com/settings/applications.  When running locally,
-  // create one through that interface (BUT UNCHECK ALL THE SCOPE BOXES)
-  // and set it in $GITHUB_TOKEN. When running in production, we'll
-  // share one that's in a settings file in lastpass.
-  var token = Meteor.settings.githubToken || process.env.GITHUB_TOKEN;
-  if (token) {
-    github.authenticate({
-      type: 'token',
-      token: token
-    });
+
+// We can't ever suggest more than this, sadly.
+var MAX_PER_PAGE = 100;
+
+
+// -------------
+// TYPE-CHECKING
+// -------------
+
+// Usage:
+//   if (asyncCheck(v, p, cb)) return;
+var asyncCheck = function (value, pattern, cb) {
+  try {
+    check(value, pattern);
+  } catch (e) {
+    if (! (e instanceof Match.Error))
+      throw e;
+    console.log("FAILED CHECK", value)
+    cb(e);
+    return true;
   }
-})();
+  return false;
+}
 
 var maybeNull = function (pattern) {
   return Match.OneOf(null, pattern);
-};
-
-var issueMongoId = function (repoOwner, repoName, number) {
-  check(repoOwner, String);
-  check(repoName, String);
-  check(number, Match.Integer);
-  return repoOwner + '/' + repoName + '#' + number;
 };
 
 var timestampMatcher = Match.Where(function (ts) {
@@ -170,6 +189,11 @@ var repositoryResponseMatcher = Match.ObjectIncluding({
   }),
   name: String
 });
+
+
+// -------------------------------------------
+// CONVERTING FROM GITHUB SCHEMA TO OUR SCHEMA
+// -------------------------------------------
 
 var userResponseToObject = function (userResponse) {
   check(userResponse, userResponseMatcher);
@@ -265,6 +289,11 @@ var commentResponseToModifier = function (options) {
   return mod;
 };
 
+
+// -------------------------------------------
+// FUNCTIONS THAT ACTUALLY MODIFY THE DATABASE
+// -------------------------------------------
+
 var saveIssue = function (options, cb) {
   if (asyncCheck(options, {
     repoOwner: String,
@@ -311,8 +340,6 @@ var saveIssue = function (options, cb) {
     cb
   );
 };
-
-var ISSUES_PER_PAGE = 100;
 
 // Saves a page of issues.
 var saveOnePageOfIssues = function (options, cb) {
@@ -410,7 +437,7 @@ var resyncAllIssues = function (options, cb) {
   github.issues.repoIssues({
     user: options.repoOwner,
     repo: options.repoName,
-    per_page: ISSUES_PER_PAGE,
+    per_page: MAX_PER_PAGE,
     state: 'all',
     sort: 'updated'   // get newest in first, just because that's useful
   }, receivePageOfIssues);
@@ -492,7 +519,7 @@ var syncAllComments = function (options, cb) {
     repo: options.repoName,
     sort: 'updated',
     direction: 'asc',
-    per_page: 100
+    per_page: MAX_PER_PAGE
   };
   if (syncedToDoc) {
     query.since = syncedToDoc.lastDate;
@@ -550,6 +577,11 @@ var syncAllComments = function (options, cb) {
 
   github.issues.repoComments(query, receivePageOfComments);
 };
+
+
+// --------
+// WEBHOOKS
+// --------
 
 // The secret is a random string that you generate (eg, `openssl rand -hex 20`)
 // and set when you set up the webhook. Always set it in production (via
@@ -620,6 +652,11 @@ webhook.on('issue_comment', Meteor.bindEnvironment(function (event) {
     commentResponse: event.payload.comment
   }, webhookComplain);
 }));
+
+
+// --------
+// CRONJOBS
+// --------
 
 // XXX rewrite to allow multiple repos
 var issueCronjob = function () {
