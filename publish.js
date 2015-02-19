@@ -9,7 +9,7 @@ if (Meteor.isClient) {
       repoOwner: repoOwner,
       repoName: repoName,
       'issueDocument.open': true,
-      'issueDocument.hasProjectLabel': false
-    });
+      'issueDocument.hasProjectLabel': true
+    }, { limit: 10 });
   });
 }

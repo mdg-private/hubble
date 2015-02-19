@@ -14,10 +14,8 @@
     color: #ddf;
     font-weight: bolder;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
-}
-
-input {
-   color: #000;
+    margin-right: 0px;
+    padding-right: 0px;
 }
 
 .state-button {
@@ -40,5 +38,18 @@ input {
 
 /* search for a tag */
 .tag-search {
-    float: right;
+   float: right;
+}
+
+
+.search-button {
+    cursor: pointer;
+    border: 1px solid black;
+    border-radius: 1em;
+    padding: 5px;
+}
+
+
+input {
+   color: #000;
 }
