@@ -1,5 +1,7 @@
 // Classify issues by status.
 
+var async = Npm.require('async');
+
 var classifyIssue = function (options, cb) {
   if (P.asyncErrorCheck(options, {
     repoOwner: String,
@@ -127,6 +129,89 @@ var classificationModifier = function (doc) {
     }
   };
 };
+
+
+// --------------------
+// CLASSIFICATION QUEUE
+// --------------------
+
+// Schema:
+//  - _id: same id as Issues
+//  - enqueued: Number (millis) enqueued (upsert with $max)
+var ClassificationQueue = P.newCollection('classificationQueue');
+
+P.needsClassification = function (id, cb) {
+  if (P.asyncErrorCheck(id, String, cb)) return;
+
+  console.log("NEEDS CLASSIFICATION", id)
+
+  ClassificationQueue.update(
+    id, { $max: { enqueued: +(new Date) } }, { upsert: true }, cb);
+};
+
+// Classifies everything currently in the queue. Result is a bool saying whether
+// anything was seen.
+var classifyCurrentQueue = function (cb) {
+  console.log("Starting to classify");
+  var queue = ClassificationQueue.find().fetch();
+  async.each(queue, function (queued, cb) {
+    async.series([
+      function (cb) {
+        classifyIssueById(queued._id, cb);
+      },
+      function (cb) {
+        // Only remove it if it hasn't already been updated with a newer
+        // enqueued number!
+        ClassificationQueue.remove(_.pick(queued, '_id', 'enqueued'), cb);
+      }
+    ], cb);
+  }, function (err) {
+    if (err) {
+      cb(err);
+      return;
+    }
+    cb(null, !! queue.length);
+  });
+};
+
+var classifyForever = function () {
+  classifyCurrentQueue(function (err, accomplished) {
+    if (err) {
+      console.error("Error classifying: " + err);
+      // Try again in 10 seconds
+      Meteor.setTimeout(classifyForever, 1000 * 10);
+      return;
+    }
+    if (accomplished) {
+      // If we managed to do something, try again immediately.
+      Meteor.defer(classifyForever);
+      return;
+    }
+
+    console.log("Waiting for classification queue");
+
+    var inInitialAdds = true;
+    var stopInInitialAdds = false;
+    var handle = ClassificationQueue.find().observeChanges({
+      added: function () {
+        if (inInitialAdds) {
+          // we don't have a handle yet during initial adds to stop it
+          stopInInitialAdds = true;
+        } else {
+          handle.stop();
+          Meteor.defer(classifyForever);
+        }
+      }
+    });
+    inInitialAdds = false;
+    if (stopInInitialAdds) {
+      handle.stop();
+      Meteor.defer(classifyForever);
+    }
+  });
+};
+
+Meteor.startup(classifyForever);
 
 // XXX remove temp method
 Meteor.methods({

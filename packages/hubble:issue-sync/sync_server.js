@@ -184,14 +184,21 @@ var saveIssue = function (options, cb) {
   var mod = issueResponseToModifier(
     _.pick(options, 'repoOwner', 'repoName', 'issueResponse'));
 
-  Issues.update(
-    // Specifying _id explicitly means we avoid fake upsert, which is good
-    // because minimongo doesn't do $max yet.
-    id,
-    mod,
-    { upsert: true },
-    cb
-  );
+  async.waterfall([
+    function (cb) {
+      // Specifying _id explicitly means we avoid fake upsert.  fullResult lets
+      // us check nModified.
+      Issues.update(id, mod, { upsert: true, fullResult: true }, cb);
+    },
+    function (result, cb) {
+      // If nothing changed, do nothing.
+      if (! result.nModified) {
+        cb();
+      } else {
+        P.needsClassification(id, cb);
+      }
+    }
+  ], cb);
 };
 
 // Saves a page of issues.
@@ -205,7 +212,7 @@ var saveOnePageOfIssues = function (options, cb) {
   var issues = options.issueResponses;
 
   if (! issues.length) {
-    throw Error("empty page?");
+     throw Error("empty page?");
   }
 
   console.log("Saving " + issues.length + " issues for " +
@@ -319,18 +326,24 @@ var saveComment = function (options, cb) {
   var mod = commentResponseToModifier(
     _.pick(options, 'repoOwner', 'repoName', 'commentResponse'));
 
-  Issues.update(
-    {
-      // Specifying _id explicitly means we avoid fake upsert, which is good
-      // because minimongo doesn't do $max yet.
-      _id: issueId,
-      repoOwner: options.repoOwner,  // so upserts sets it (good for index)
-      repoName: options.repoName  // ditto
+  async.waterfall([
+    function (cb) {
+      Issues.update({
+        // Specifying _id explicitly means we avoid fake upsert.
+        _id: issueId,
+        repoOwner: options.repoOwner,  // so upserts sets it (good for index)
+        repoName: options.repoName  // ditto
+      }, mod, { upsert: true, fullResult: true }, cb);
     },
-    mod,
-    { upsert: true },
-    cb
-  );
+    function (result, cb) {
+      // If nothing changed, do nothing.
+      if (! result.nModified) {
+        cb();
+      } else {
+        P.needsClassification(issueId, cb);
+      }
+    }
+  ], cb);
 };
 
 // Saves a page of comments.
