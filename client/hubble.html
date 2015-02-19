@@ -3,14 +3,24 @@
 </head>
 
 <body>
-  {{> navbar}}
-  {{> tempUX}}
 </body>
 
 
 
 
 <template name="hello">
-  <button class="btn btn-info">Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+  {{> navbar}}
+  {{> yield}}
+</template>
+
+
+<template name="generic">
+  <div class="container-fluid row">
+    <div class="buffer"> </div>
+    <div class="col-md-1"> </div>
+    <div class="col-md-10">
+      {{> viewIssues }}
+     </div>
+   <div class="col-md-1"> </div>
+  </div>
 </template>

@@ -1,1 +1,25 @@
 /* CSS declarations go here */
+.avatar {
+    height: 50px;
+    width: 50px;
+    padding: 2px;
+}
+
+.main {
+  width: 100vw;
+  height: 100vh;
+  background: #004;
+}
+
+.buffer {
+  height: 3em;
+}
+
+.user {
+    text-align:center;
+}
+
+body {
+  background-image: url(theme.jpg);
+
+}
