@@ -18,8 +18,8 @@ Npm.depends({
 
 Package.onUse(function(api) {
   api.use(['check', 'mongo', 'webapp', 'underscore']);
-  api.addFiles('server.js', 'server');
-  api.addFiles('hubble:issue-sync.js');
+  api.addFiles(['config_server.js', 'sync_server.js'], 'server');
+  api.addFiles('client.js', 'client');
   api.export('Issues');
 });
 

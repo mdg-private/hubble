@@ -1,7 +1,4 @@
 var Future = Npm.require('fibers/future');
-var githubModule = Npm.require('github');
-var githubError = Npm.require('github/error');
-var githubWebhookHandler = Npm.require('github-webhook-handler');
 var async = Npm.require('async');
 
 
@@ -9,18 +6,7 @@ var async = Npm.require('async');
 // MONGO SETUP
 // -----------
 
-var driver;
-if (Meteor.settings.mongo) {
-  driver = new MongoInternals.RemoteCollectionDriver(
-    Meteor.settings.mongo.mongoUrl, {
-      oplogUrl: Meteor.settings.mongo.oplogUrl
-    }
-  );
-} else {
-  driver = MongoInternals.defaultRemoteCollectionDriver();
-}
-
-Issues = new Mongo.Collection('issues', { _driver: driver });
+Issues = P.newCollection('issues');
 Issues._ensureIndex({
   repoOwner: 1,
   repoName: 1
@@ -37,7 +23,7 @@ var issueMongoId = function (repoOwner, repoName, number) {
 
 // id eg 'meteor/meteor#comments'
 // only relevant field is lastDate (String)
-var SyncedTo = new Mongo.Collection('syncedTo', { _driver: driver });
+var SyncedTo = P.newCollection('syncedTo');
 var syncedToMongoId = function (repoOwner, repoName, which) {
   check(repoOwner, String);
   check(repoName, String);
@@ -46,54 +32,6 @@ var syncedToMongoId = function (repoOwner, repoName, which) {
 };
 
 
-// ----------------
-// GITHUB API SETUP
-// ----------------
-
-var github = new githubModule({
-  version: '3.0.0',
-  debug: !!process.env.GITHUB_API_DEBUG,
-  headers: {
-    "user-agent": "githubble.meteor.com"
-  }
-});
-
-(function () {
-  // This is a "personal access token" with NO SCOPES from
-  // https://github.com/settings/applications.  When running locally,
-  // create one through that interface (BUT UNCHECK ALL THE SCOPE BOXES)
-  // and set it in $GITHUB_TOKEN. When running in production, we'll
-  // share one that's in a settings file in lastpass.
-  var token = Meteor.settings.githubToken || process.env.GITHUB_TOKEN;
-  if (token) {
-    github.authenticate({
-      type: 'token',
-      token: token
-    });
-  }
-})();
-
-// For some reason, the errors from the github module don't show up well.
-var fixGithubError = function (e) {
-  if (! (e instanceof githubError.HttpError))
-    return e;
-  // note that e.message is a string with JSON, from github
-  return new Error(e.message);
-};
-
-var githubify = function (callback) {
-  return Meteor.bindEnvironment(function (err, result) {
-    if (err) {
-      callback(fixGithubError(err));
-    } else {
-      callback(null, result);
-    }
-  });
-};
-
-
-// We can't ever suggest more than this, sadly.
-var MAX_PER_PAGE = 100;
 
 
 // -------------
@@ -113,7 +51,7 @@ var asyncCheck = function (value, pattern, cb) {
     return true;
   }
   return false;
-}
+};
 
 var maybeNull = function (pattern) {
   return Match.OneOf(null, pattern);
@@ -294,6 +232,9 @@ var commentResponseToModifier = function (options) {
 // FUNCTIONS THAT ACTUALLY MODIFY THE DATABASE
 // -------------------------------------------
 
+// We can't ever suggest more than this, sadly.
+var MAX_PER_PAGE = 100;
+
 var saveIssue = function (options, cb) {
   if (asyncCheck(options, {
     repoOwner: String,
@@ -374,11 +315,11 @@ var resyncOneIssue = function (options, cb) {
     number: Match.Integer
   }, cb)) return;
 
-  github.issues.getRepoIssue({
+  P.github.issues.getRepoIssue({
     user: options.repoOwner,
     repo: options.repoName,
     number: options.number
-  }, githubify(function (err, issue) {
+  }, P.githubify(function (err, issue) {
     if (err) {
       cb(err);
       return;
@@ -409,7 +350,7 @@ var resyncAllIssues = function (options, cb) {
   console.log("Resyncing issues for " +
               options.repoOwner + "/" + options.repoName);
 
-  var receivePageOfIssues = githubify(function (err, issues) {
+  var receivePageOfIssues = P.githubify(function (err, issues) {
     if (err) {
       cb(err);
       return;
@@ -426,15 +367,15 @@ var resyncAllIssues = function (options, cb) {
     }, function (err) {
       if (err) {
         cb(err);
-      } else if (github.hasNextPage(issues)) {
-        github.getNextPage(issues, receivePageOfIssues);
+      } else if (P.github.hasNextPage(issues)) {
+        P.github.getNextPage(issues, receivePageOfIssues);
       } else {
         cb();
       }
     });
   });
 
-  github.issues.repoIssues({
+  P.github.issues.repoIssues({
     user: options.repoOwner,
     repo: options.repoName,
     per_page: MAX_PER_PAGE,
@@ -528,7 +469,7 @@ var syncAllComments = function (options, cb) {
   console.log('Syncing ' + syncedToId +
               (syncedToDoc ? ' since ' + syncedToDoc.lastDate : ''));
 
-  var receivePageOfComments = githubify(function (err, comments) {
+  var receivePageOfComments = P.githubify(function (err, comments) {
     if (err) {
       cb(err);
       return;
@@ -565,8 +506,8 @@ var syncAllComments = function (options, cb) {
             return;
           }
 
-          if (github.hasNextPage(comments)) {
-            github.getNextPage(comments, receivePageOfComments);
+          if (P.github.hasNextPage(comments)) {
+            P.github.getNextPage(comments, receivePageOfComments);
           } else {
             cb();
           }
@@ -575,7 +516,7 @@ var syncAllComments = function (options, cb) {
     });
   });
 
-  github.issues.repoComments(query, receivePageOfComments);
+  P.github.issues.repoComments(query, receivePageOfComments);
 };
 
 
@@ -583,33 +524,15 @@ var syncAllComments = function (options, cb) {
 // WEBHOOKS
 // --------
 
-// The secret is a random string that you generate (eg, `openssl rand -hex 20`)
-// and set when you set up the webhook. Always set it in production (via
-// settings in lastpass), and generally set it while testing too --- otherwise
-// random people on the internet can insert stuff into your database!
-var webhook = githubWebhookHandler({
-  secret: (Meteor.settings.githubWebhookSecret ||
-           process.env.GITHUB_WEBHOOK_SECRET)
-});
-
-WebApp.connectHandlers.use('/webhook', Meteor.bindEnvironment(function (req, res, next) {
-  if (req.method.toLowerCase() !== 'post') {
-    next();
-    return;
-  }
-
-  webhook(req, res);
-}));
-
 var webhookComplain = function (err) {
   if (err) {
     console.error("Error in webhook:", err);
   }
 };
 
-webhook.on('error', webhookComplain);
+P.webhook.on('error', webhookComplain);
 
-webhook.on('issues', Meteor.bindEnvironment(function (event) {
+P.webhook.on('issues', Meteor.bindEnvironment(function (event) {
   if (asyncCheck(event.payload, Match.ObjectIncluding({
     issue: issueResponseMatcher,
     repository: repositoryResponseMatcher
@@ -622,7 +545,7 @@ webhook.on('issues', Meteor.bindEnvironment(function (event) {
   }, webhookComplain);
 }));
 
-webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
+P.webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
   if (asyncCheck(event.payload, Match.ObjectIncluding({
     pull_request: Match.ObjectIncluding({
       number: Match.Integer
@@ -640,7 +563,7 @@ webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
   }, webhookComplain);
 }));
 
-webhook.on('issue_comment', Meteor.bindEnvironment(function (event) {
+P.webhook.on('issue_comment', Meteor.bindEnvironment(function (event) {
   if (asyncCheck(event.payload, Match.ObjectIncluding({
     comment: commentResponseMatcher,
     repository: repositoryResponseMatcher
