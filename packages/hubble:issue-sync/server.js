@@ -32,17 +32,13 @@ var asyncCheck = function (value, pattern, cb) {
 Issues = new Mongo.Collection('issues', { _driver: driver });
 Issues._ensureIndex({
   repoOwner: 1,
-  repoName: 1,
-  'issueDocument.number': 1
-}, { unique: true });
+  repoName: 1
+});
 // XXX more indices?
 
 
 // id eg 'meteor/meteor#comments'
 // only relevant field is lastDate (String)
-// XXX Turns out that this isn't actually helpful for issues (because
-//     updated_at doesn't tell you about relabelings) but it is probably for
-//     comments.
 var SyncedTo = new Mongo.Collection('syncedTo', { _driver: driver });
 var syncedToMongoId = function (repoOwner, repoName, which) {
   check(repoOwner, String);
@@ -65,6 +61,16 @@ var fixGithubError = function (e) {
     return e;
   // note that e.message is a string with JSON, from github
   return new Error(e.message);
+};
+
+var githubify = function (callback) {
+  return Meteor.bindEnvironment(function (err, result) {
+    if (err) {
+      callback(fixGithubError(err));
+    } else {
+      callback(null, result);
+    }
+  });
 };
 
 (function () {
@@ -92,6 +98,11 @@ var issueMongoId = function (repoOwner, repoName, number) {
   check(number, Match.Integer);
   return repoOwner + '/' + repoName + '#' + number;
 };
+
+var timestampMatcher = Match.Where(function (ts) {
+  check(ts, String);
+  return ts.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+});
 
 var userResponseMatcher = Match.ObjectIncluding({
   login: String,
@@ -136,9 +147,19 @@ var issueResponseMatcher = Match.ObjectIncluding({
     html_url: String,
     patch_url: String
   }),
-  created_at: String,
-  closed_at: maybeNull(String),
-  updated_at: String
+  created_at: timestampMatcher,
+  closed_at: maybeNull(timestampMatcher),
+  updated_at: timestampMatcher
+});
+
+var commentResponseMatcher = Match.ObjectIncluding({
+  id: Match.Integer,
+  url: String,
+  html_url: String,
+  body: String,
+  user: userResponseMatcher,
+  created_at: timestampMatcher,
+  updated_at: timestampMatcher
 });
 
 var userResponseToObject = function (userResponse) {
@@ -204,6 +225,35 @@ var issueResponseToModifier = function (options) {
       }
     }
   };
+};
+
+// With this key, comments in the comments map will be sorted in chronological
+// order if you sort by key.
+var commentKey = function (commentResponse) {
+  return commentResponse.created_at + '!' + commentResponse.id;
+};
+
+var commentResponseToModifier = function (options) {
+  check(options, {
+    repoOwner: String,
+    repoName: String,
+    commentResponse: commentResponseMatcher
+  });
+
+  var c = options.commentResponse;
+
+  var key = commentKey(c);
+  var mod = { $set: {} };
+  mod.$set['comments.' + key] = {
+    id: c.id,
+    url: c.url,
+    htmlUrl: c.html_url,
+    body: c.body,
+    user: userResponseToObject(c.user),
+    createdAt: new Date(c.created_at),
+    updatedAt: new Date(c.updated_at)
+  };
+  return mod;
 };
 
 var saveIssue = function (options, cb) {
@@ -272,7 +322,7 @@ var saveOnePageOfIssues = function (options, cb) {
   console.log("Saving " + issues.length + " issues for " +
               options.repoOwner + "/" + options.repoName + ": " +
               JSON.stringify(_.pluck(issues, 'number')));
-  async.map(issues, function (issueResponse, cb) {
+  async.each(issues, function (issueResponse, cb) {
     saveIssue({
       repoOwner: options.repoOwner,
       repoName: options.repoName,
@@ -292,9 +342,9 @@ var resyncOneIssue = function (options, cb) {
     user: options.repoOwner,
     repo: options.repoName,
     number: options.number
-  }, Meteor.bindEnvironment(function (err, issue) {
+  }, githubify(function (err, issue) {
     if (err) {
-      cb(fixGithubError(err));
+      cb(err);
       return;
     }
     saveIssue({
@@ -323,9 +373,9 @@ var resyncAllIssues = function (options, cb) {
   console.log("Resyncing issues for " +
               options.repoOwner + "/" + options.repoName);
 
-  var receivePageOfIssues = Meteor.bindEnvironment(function (err, issues) {
+  var receivePageOfIssues = githubify(function (err, issues) {
     if (err) {
-      cb(fixGithubError(err));
+      cb(err);
       return;
     }
     if (! issues.length) {
@@ -357,6 +407,140 @@ var resyncAllIssues = function (options, cb) {
   }, receivePageOfIssues);
 };
 
+var saveComment = function (options, cb) {
+  if (! asyncCheck(options, {
+    repoOwner: String,
+    repoName: String,
+    commentResponse: commentResponseMatcher
+  }, cb)) return;
+
+  var comment = options.commentResponse;
+
+  // Ugh.  Comments don't actually have an issue number!
+  var issueUrlMatch = comment.issue_url.match(/\/issues\/(\d+)$/);
+  if (! issueUrlMatch) {
+    cb(Error("Bad issue URL: " + comment.issue_url));
+    return;
+  }
+  var issueNumber = +issueUrlMatch[1];
+
+  var issueId = issueMongoId(options.repoOwner, options.repoName, issueNumber);
+
+  var mod = commentResponseToModifier(
+    _.pick(options, 'repoOwner', 'repoName', 'commentResponse'));
+
+  Issues.update(
+    {
+      // Specifying _id explicitly means we avoid fake upsert, which is good
+      // because minimongo doesn't do $max yet.
+      _id: issueId,
+      repoOwner: options.repoOwner,  // so upserts sets it (good for index)
+      repoName: options.repoName  // ditto
+    },
+    mod,
+    { upsert: true },
+    cb
+  );
+};
+
+// Saves a page of comments.
+var saveOnePageOfComments = function (options, cb) {
+  if (! asyncCheck(options, {
+    repoOwner: String,
+    repoName: String,
+    commentResponses: [commentResponseMatcher]
+  }, cb)) return;
+
+  var comments = options.commentResponses;
+
+  if (! comments.length) {
+    throw Error("empty page?");
+  }
+
+  async.each(comments, function (commentResponse, cb) {
+    saveComment({
+      repoOwner: options.repoOwner,
+      repoName: options.repoName,
+      commentResponse: commentResponse
+    }, cb);
+  }, cb);
+};
+
+// Syncs all comments. Unlike with issues, we can use a 'since' and not go back
+// to the beginning of time, because all changes we care about update the
+// updated_at date.
+var syncAllComments = function (options, cb) {
+  if (! asyncCheck(options, {
+    repoOwner: String,
+    repoName: String
+  }, cb)) return;
+
+  var syncedToId = syncedToMongoId(
+    options.repoOwner, options.repoName, 'comments');
+  var syncedToDoc = SyncedTo.findOne(syncedToId);
+  var query = {
+    user: options.repoOwner,
+    repo: options.repoName,
+    sort: 'updated',
+    direction: 'asc',
+    per_page: 100
+  };
+  if (syncedToDoc) {
+    query.since = syncedToDoc.lastDate;
+  }
+
+  console.log('Syncing ' + syncedToId +
+              (syncedToDoc ? ' since ' + syncedToDoc.lastDate : ''));
+
+  var receivePageOfComments = githubify(function (err, comments) {
+    if (err) {
+      cb(err);
+      return;
+    }
+    if (! comments.length) {
+      cb();
+      return;
+    }
+
+    var newLastDate = _.last(comments).updated_at;
+    console.log(
+      "Saving " + comments.length + " comments for " +
+        options.repoOwner + "/" + options.repoName + " up to " + newLastDate);
+
+    saveOnePageOfComments({
+      repoOwner: options.repoOwner,
+      repoName: options.repoName,
+      commentResponses: comments
+    }, function (err) {
+      if (err) {
+        cb(err);
+        return;
+      }
+      // Save the last one we've successfully saved. (Note that the next call to
+      // syncAllComments will resync this comment; seems better than trying to
+      // add 1 and maybe missing a second comment from the same second.)
+      SyncedTo.update(
+        syncedToId,
+        { $set: { lastDate: newLastDate } },
+        { upsert: true },
+        function (err) {
+          if (err) {
+            cb(err);
+            return;
+          }
+
+          if (github.hasNextPage(comments)) {
+            github.getNextPage(comments, receivePageOfComments);
+          } else {
+            cb();
+          }
+        }
+      );
+    });
+  });
+
+  github.issues.repoComments(query, receivePageOfComments);
+};
 
 // Unfortunately can't get this from WebAppInternals.
 var myPersonalConnect = Npm.require('connect');
@@ -404,28 +588,38 @@ WebApp.connectHandlers.use('/webhook/issues', Meteor.bindEnvironment(function (r
   }, respond);
 }));
 
-// XXX rewerite to allow multiple repos
-var cronjob = function () {
+// XXX rewrite to allow multiple repos
+var issueCronjob = function () {
   resyncAllIssues({
     repoOwner: 'meteor',
     repoName: 'meteor'
   }, function (err) {
     if (err) {
-      console.error("Error in cronjob: " + err.stack);
+      console.error("Error in issue cronjob: " + err.stack);
     }
-    console.log("Done cronjob");
+    console.log("Done issue cronjob");
     // Full resync every 20 minutes, and on startup.  (Webhook does the trick
     // otherwise.)
-    Meteor.setTimeout(cronjob, 1000 * 60 * 20);
+    Meteor.setTimeout(issueCronjob, 1000 * 60 * 20);
   });
 };
-Meteor.startup(cronjob);
+// Meteor.startup(issueCronjob);
 
-// XXX this is for testing, remove
-Meteor.methods({
-  resyncAllIssues: function (options) {
-    var f = new Future;
-    resyncAllIssues(options, f.resolver());
-    return f.wait();
-  }
-});
+// XXX rewrite to allow multiple repos
+var commentCronjob = function () {
+  syncAllComments({
+    repoOwner: 'meteor',
+    repoName: 'meteor'
+  }, function (err) {
+    if (err) {
+      console.error("Error in comment cronjob: " + err.stack);
+    }
+    console.log("Done comment cronjob");
+    // Sync every minute, and on startup.  (Webhook does the trick otherwise.)
+    //
+    // Because this one actually works incrementally (unlike the issue cronjob)
+    // it's OK to make it once a minute.
+    Meteor.setTimeout(commentCronjob, 1000 * 60);
+  });
+};
+Meteor.startup(commentCronjob);

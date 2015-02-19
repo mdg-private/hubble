@@ -66,11 +66,14 @@ Issue:
 - recentCommentsCount*: Number
 - msSpentInNew*: Number
 - status*:
-  - NEW -- no MDG opener/commenter and not (closed-and-only-commented-on-by-original-user)
-  - STIRRING -- exists at least one MDG opener/comment, closed, and last opener/comment/snooze
-    is non-MDG, and not highlyActive
-  - ACTIVE -- exists at least one MDG opener/comment, open, and last opener/comment/snooze
-    is non-MDG, and not highlyActive
+  - MYSTERY -- we've recorded comments for this but we haven't recorded
+    issue metadata. (Probably never publish these!)
+  - NEW -- no MDG opener/commenter and not
+    (closed-and-only-commented-on-by-original-user)
+  - STIRRING -- exists at least one MDG opener/comment, closed, and last
+    opener/comment/snooze is non-MDG, and not highlyActive
+  - ACTIVE -- exists at least one MDG opener/comment, open, and last
+    opener/comment/snooze is non-MDG, and not highlyActive
   - HIGHLY ACTIVE -- exists at least one MDG opener/comment and has highlyActive set
   - TRIAGED -- exists at least one MDG opener/comment, and last opener/comment/snooze
     is MDG, and open, and not highlyActive
