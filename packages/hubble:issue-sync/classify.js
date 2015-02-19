@@ -47,6 +47,59 @@ P.asyncMethod('snooze', function (options, cb) {
   ], cb);
 });
 
+P.asyncMethod('setHighlyActive', function (options, cb) {
+  var mongoId;
+
+  P.asyncVoidSeries([
+    P.requireLoggedIn,
+    _.partial(P.asyncCheck, options, Match.ObjectIncluding({
+      repoOwner: String,
+      repoName: String,
+      number: Match.Integer,
+      highlyActive: Boolean
+    })),
+    function (cb) {
+      mongoId = P.issueMongoId(
+        options.repoOwner, options.repoName, options.number);
+      if (! Issues.findOne(mongoId)) {
+        cb(new Meteor.Error(404, "No such issue"));
+        return;
+      }
+      var user = new Meteor.user();
+      if (P.asyncErrorCheck(user, Match.ObjectIncluding({
+        services: Match.ObjectIncluding({
+          github: Match.ObjectIncluding({
+            id: Match.Integer,
+            username: String
+          })
+        })
+      }))) return;
+
+      Issues.update(mongoId, {
+        $set: {
+          highlyActive: options.highlyActive
+        },
+        $push: {
+          // This is just a log that we could use in the future to display who
+          // set something highly active and to determine historical status
+          // values.
+          highlyActiveLog: {
+            when: new Date,
+            login: user.services.github.username,
+            id: user.services.github.id,
+            setTo: options.highlyActive
+          }
+        }
+      }, cb);
+    },
+    function (cb) {
+      P.needsClassification(mongoId, cb);
+    }
+  ], cb);
+});
+
+
+
 // ------------------------
 // CLASSIFICATION ALGORITHM
 // ------------------------

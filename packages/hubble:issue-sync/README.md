@@ -50,7 +50,11 @@ Issue:
   - login: String
   - id: Number (github user id)
 - highlyActive: Boolean
-- highlyActiveToggleDates: [Date] (push when toggled)
+- highlyActiveLog: Array of Object
+  - when: Date
+  - login: String
+  - id: Number (github user id)
+  - setTo: Boolean
 - comments: Map
   - key: created_at STRING + '!' + id
   - value: Object
