@@ -5,7 +5,8 @@ Meteor.startup(function () {
   // new
   States.insert({ tag: "unresponded", name: "Unresponded", color: "D2B91B", urgency: 10 });
 
-  States.insert({ tag: "unresponded-closed", name: "Unresponded but closed", color: "D2B91B", urgency: 9.5 });
+  States.insert({
+    tag: "unresponded-closed", name: "Unresponded & Closed", color: "657489", urgency: 0.5 });
 
   // active
   States.insert({ tag: "active", name: "Active", color: "F22", urgency: 7  });
@@ -14,7 +15,7 @@ Meteor.startup(function () {
   States.insert({ tag: "triaged", name: "Triaged", color: "33aa55",  urgency: 3 });
 
   // closed
-  States.insert({ tag: "closed", name: "Closed", color: "777", urgency: 0 });
+  States.insert({ tag: "closed", name: "Closed", color: "777", urgency: 1 });
 
   // stirring
   States.insert({ tag: "stirring", name: "Stirring", color: "FAAC58", urgency: 9 });
