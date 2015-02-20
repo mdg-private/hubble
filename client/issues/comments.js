@@ -1,6 +1,9 @@
 Template.comments.helpers({
   comments: function () {
-    return _.values(this.comments);
+    var self = this;
+    return _.map(_.keys(self.recentComments || {}).sort(), function (key) {
+      return self.recentComments[key];
+    });
   },
   url: function () {
     return this.issueDocument.htmlUrl;
@@ -29,6 +32,10 @@ Template.comments.events({
     // XXX: HIGH_ACTIVE_BUTTON
     Session.set(displayId(this), false);
   }
+});
+
+Template.comments.onCreated(function () {
+  this.subscribe('issue-recent-comments', this.data._id);
 });
 
 var nextColor = 0;

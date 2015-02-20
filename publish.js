@@ -80,6 +80,11 @@ if (Meteor.isServer) {
       handle.stop();
     });
   });
+
+  Meteor.publish('issue-recent-comments', function (id) {
+    check(id, String);
+    return Issues.find({ _id: id }, { fields: { recentComments: 1 } });
+  });
 }
 
 quotemeta = function (str) {
