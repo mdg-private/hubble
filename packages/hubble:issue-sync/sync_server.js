@@ -258,12 +258,7 @@ var resyncOneComment = function (options, cb) {
   P.github.issues.getComment({
     user: options.repoOwner,
     repo: options.repoName,
-    id: options.id,
-    headers: {
-      // Include body and body_html.  (We don't trust our own Markdown generator
-      // to be safe.)
-      Accept: 'application/vnd.github.VERSION.full+json'
-    }
+    id: options.id
   }, P.githubify(function (err, comment) {
     if (err) {
       cb(err);
@@ -412,12 +407,7 @@ var syncAllComments = function (options, cb) {
     repo: options.repoName,
     sort: 'updated',
     direction: 'asc',
-    per_page: MAX_PER_PAGE,
-    headers: {
-      // Include body and body_html.  (We don't trust our own Markdown generator
-      // to be safe.)
-      Accept: 'application/vnd.github.VERSION.full+json'
-    }
+    per_page: MAX_PER_PAGE
   };
   if (syncedToDoc) {
     query.since = syncedToDoc.lastDate;

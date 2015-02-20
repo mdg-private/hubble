@@ -29,6 +29,11 @@ var githubError = Npm.require('github/error');
 
 P.github = new githubModule({
   version: '3.0.0',
+  // Include body and body_html.  (We don't trust our own Markdown generator to
+  // be safe.)  Including this on the individual request is tough because
+  // getNextPage doesn't respect it.  See
+  // https://github.com/mikedeboer/node-github/issues/229
+  requestMedia: 'application/vnd.github.VERSION.full+json',
   debug: !!process.env.GITHUB_API_DEBUG,
   headers: {
     "user-agent": "githubble.meteor.com"
