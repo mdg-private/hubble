@@ -8,17 +8,20 @@ Router.route('/', function () {
 });
 
 var setTag = function (tag) {
-  Session.set("labelFilter", tag);
+  var tags = tag.split(' ');
+  Session.set("labelFilter", tags);
+  Session.set("labelFilterRaw", tag);
 };
 
 var setStates = function (states) {
-  var selected = states.split("&");
+  var selected = states.split(" ");
   _.each(selected, function (state) {
     States.update({ tag: state }, {$set: { selected: true }});
   });
   // XXX glasser doesn't understand why this doesn't have to deselect the other
   // states too
 };
+
 
 Router.route('/states/:_states', function () {
   this.layout("hello");

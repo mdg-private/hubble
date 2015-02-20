@@ -10,26 +10,25 @@ Template.issueNav.helpers({
   },
   filter: function () {
    var me =  document.getElementById("tag-search");
-   return (me && me.value) || Session.get("labelFilter");
+   return (me && me.value) || Session.get("labelFilterRaw");
   }
 });
 
 Template.viewIssues.helpers({
   issues: function () {
     var selectedStates = _.pluck(States.find({ selected: true }).fetch(), 'tag');
-    var finder = { };
-    if (! _.isEmpty(selectedStates)) {
-      _.extend(finder, { "status": {$in: selectedStates }});
-    }
-    if (Session.get("labelFilter")) {
-      _.extend(finder,
-        { "issueDocument.labels.name":
-          { $regex: quotemeta(Session.get("labelFilter")) + ".*" }
-        });
-    }
+    var finder = constructIssueFinder(selectedStates, Session.get("labelFilter"));
     return Issues.find(finder, { $sort: { "issueDocument.updatedAt": -1 } });
   }
 });
+
+var constructIssueFinder = function(states, tags) {
+  var finder = constructTagFilter(tags);
+  if (! _.isEmpty(states)) {
+    _.extend(finder, { status: { $in: states }});
+  }
+  return finder;
+};
 
 Template.unlabeledIssues.onCreated(function () {
   this.subscribe('unlabeled-open');
@@ -62,7 +61,9 @@ Template.issueNav.events({
 });
 
 filterByTag = function (tag) {
-  Session.set("labelFilter", tag);
+  Session.set("labelFilterRaw", tag);
+  var tags = tag.trim().split(' ');
+  Session.set("labelFilter", tags);
 };
 
 Counts = new Mongo.Collection("counts");

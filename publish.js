@@ -30,8 +30,8 @@ if (Meteor.isServer) {
     }, { fields: issueBoxFields });
   });
 
-  Meteor.publish('status-counts', function (tag) {
-    check(tag, String);
+  Meteor.publish('status-counts', function (tags) {
+    check(tags, [String]);
     var self = this;
     var countsByStatus = {};
 
@@ -56,12 +56,7 @@ if (Meteor.isServer) {
 
     var initializing = true;
 
-    var finder = {};
-    if (tag) {
-      // XXX maybe case insensitive?
-      finder['issueDocument.labels.name'] = { $regex: quotemeta(tag) };
-    }
-
+    var finder = constructTagFilter(tags);
     var handle = Issues.find(finder, { fields: { status: 1 } }).observe({
       added: function (doc) {
         if (! doc.status) return;
@@ -95,6 +90,25 @@ if (Meteor.isServer) {
   });
 }
 
-quotemeta = function (str) {
+var quotemeta = function (str) {
   return String(str).replace(/(\W)/g, '\\$1');
+};
+
+
+constructTagFilter = function(tags) {
+  if (_.isEmpty(tags)) return {};
+  var goodReg = [];
+  var reg = [];
+  _.each(tags, function (tag) {
+    // We want to match *any* of the good tags, so we want to compose that
+    // separately as an $or clause. By contrast, we want to match *none* of the
+    // bad tags.
+    if (!tag.match(/^-/g)) {
+      goodReg.push({"issueDocument.labels.name": { $regex: quotemeta(tag) }});
+    } else {
+      reg.push({"issueDocument.labels.name":{$regex: quotemeta("!" + tag.slice(1)) }});
+    }
+  });
+  reg.push({$or: goodReg});
+  return {$and: reg};
 };

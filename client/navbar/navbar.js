@@ -21,11 +21,11 @@ compileLink = function () {
   var url = "";
   if (States.findOne({ selected: true })) {
     var selected = States.find({ selected: true }).fetch();
-    var statesStr = _.pluck(selected, "tag").join("&");
+    var statesStr = _.pluck(selected, "tag").join("+");
     url += "/states/" + statesStr;
   }
-  if (Session.get("labelFilter")) {
-    url += "/filter/" + Session.get("labelFilter");
+  if (Session.get("labelFilterRaw")) {
+    url += "/filter/" + Session.get("labelFilter").join("+");
   }
   return url;
 };
