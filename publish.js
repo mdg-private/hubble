@@ -12,6 +12,7 @@ if (Meteor.isServer) {
       "issueDocument.user" : 1,
       "issueDocument.hasProjectLabel" : 1,
       "recentCommentsCount" : 1,
+      lastUpdateOrComment: 1,
       highlyActive: 1,
       status: 1
     };
