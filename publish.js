@@ -14,6 +14,7 @@ if (Meteor.isServer) {
       "issueDocument.user" : 1,
       "issueDocument.hasProjectLabels" : 1,
       "recentCommentsCount" : 1,
+      highlyActive: 1,
       status: 1
     };
     return Issues.find({

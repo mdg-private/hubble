@@ -73,7 +73,7 @@ Meteor.startup(function () {
   States.insert({ tag: "stirring", name: "Stirring", color: "FAAC58", urgency: 9 });
 
   // highly-active
-  States.insert({ tag: "highly-active", name: "Highly-Active", color: "77F",  urgency: 5 });
+  States.insert({ tag: "highly-active", name: "Highly Active", color: "77F",  urgency: 5 });
 });
 
 Template.subscribe.onCreated( function () {

@@ -33,7 +33,12 @@ Template.comments.events({
     Session.set(displayId(this), false);
   },
   "click .highly-active": function () {
-    // XXX: HIGH_ACTIVE_BUTTON
+    Meteor.call('setHighlyActive', {
+      repoOwner: this.repoOwner,
+      repoName: this.repoName,
+      number: this.issueDocument.number,
+      highlyActive: ! this.highlyActive
+    });
     Session.set(displayId(this), false);
   }
 });

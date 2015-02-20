@@ -10,7 +10,11 @@
      <div class="comment-panel container-fluid">
        <div class="col-md-2">
         <div class="highly-active comment-panel-button">
-          highly active
+          {{#if highlyActive}}
+            unmark as highly active
+          {{else}}
+            mark as highly active
+          {{/if}}
         </div>
        </div>
        <div class="col-md-4">
