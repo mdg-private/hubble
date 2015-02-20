@@ -19,6 +19,12 @@
     float: left;
 }
 
+.navbar-link {
+    position: absolute;
+    top: 1em;
+    left: 15em;
+}
+
 .logo {
     float: left;
 }

@@ -31,6 +31,18 @@ Template.viewIssues.helpers({
   }
 });
 
+Template.unlabeledIssues.onCreated(function () {
+  this.subscribe('unlabeled-open');
+});
+
+Template.unlabeledIssues.helpers({
+  issues: function () {
+    return Issues.find({
+      'issueDocument.open': true,
+      'issueDocument.hasProjectLabel': false
+    }, { sorted: { 'issueDocument.updatedAt': -1 } });
+  }
+});
 
 Template.issueNav.events({
   'click .state-button' : function () {

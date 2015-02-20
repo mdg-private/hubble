@@ -1,7 +1,5 @@
 if (Meteor.isServer) {
-  Meteor.publish('issues-by-status', function (status) {
-    check(status, String);
-    var defFields = {
+  var issueBoxFields = {
       repoOwner: 1,
       repoName: 1,
       "issueDocument.id": 1,
@@ -12,16 +10,25 @@ if (Meteor.isServer) {
       "issueDocument.body" : 1,
       "issueDocument.labels" : 1,
       "issueDocument.user" : 1,
-      "issueDocument.hasProjectLabels" : 1,
+      "issueDocument.hasProjectLabel" : 1,
       "recentCommentsCount" : 1,
       highlyActive: 1,
       status: 1
     };
+
+  Meteor.publish('issues-by-status', function (status) {
+    check(status, String);
     return Issues.find({
       status: status
-    }, { fields: defFields });
+    }, { fields: issueBoxFields });
   });
 
+  Meteor.publish('unlabeled-open', function () {
+    return Issues.find({
+      'issueDocument.open': true,
+      'issueDocument.hasProjectLabel': false
+    }, { fields: issueBoxFields });
+  });
 
   Meteor.publish('status-counts', function (tag) {
     check(tag, String);

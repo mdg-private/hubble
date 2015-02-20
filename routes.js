@@ -42,3 +42,8 @@ Router.route('/states/:_states/filter/:_tag', function () {
   setTag(this.params._tag);
   this.render("generic");
 }, 'client');
+
+Router.route('/unlabeled', function () {
+  this.layout('hello');
+  this.render('unlabeled');
+}, 'client');
