@@ -74,7 +74,7 @@ Issue:
 - status*:
   - mystery -- we've recorded comments for this but we haven't recorded
     issue metadata. (Probably never publish these!)
-  - new -- no MDG opener/commenter and not
+  - unresponded/unresponded-closed -- no MDG opener/commenter and not
     (closed-and-only-commented-on-by-original-user)
   - stirring -- exists at least one MDG opener/comment, closed, and last
     opener/comment/snooze is non-MDG, and not highlyActive

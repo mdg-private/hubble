@@ -193,11 +193,11 @@ var classificationModifier = function (doc) {
 
   var status = null;
   if (! teamOpener && ! teamCommented && ! fastClose) {
-    // The only way to get out of NEW is a publicly visible action by a team
-    // member, or the special "fast close" case.
-    status = 'new';
+    // The only way to get out of unresponded is a publicly visible action by a
+    // team member, or the special "fast close" case.
+    status = open ? 'unresponded' : 'unresponded-closed';
   } else if (highlyActive) {
-    // Anything not NEW with the highlyActive bit is HIGHLY-ACTIVE.
+    // Anything not unresponded* with the highlyActive bit is HIGHLY-ACTIVE.
     status = 'highly-active';
   } else if (open && lastActionWasTeam) {
     // It's open and we were the last to act (possibly by snoozing).
@@ -215,7 +215,7 @@ var classificationModifier = function (doc) {
   }
 
   var msSpentInNew = null;
-  if (status !== 'new') {
+  if (status !== 'unresponded' && status !== 'unresponded-closed') {
     if (teamOpener) {
       msSpentInNew = 0;
     } else if (fastClose) {
