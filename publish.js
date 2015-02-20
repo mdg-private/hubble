@@ -1,4 +1,4 @@
-if (Meteor.server) {
+if (Meteor.isServer) {
   Meteor.publish('issues-by-status', function (status) {
     check(status, String);
     var defFields = {
@@ -80,9 +80,8 @@ if (Meteor.server) {
       handle.stop();
     });
   });
-
 }
 
-var quotemeta = function (str) {
+quotemeta = function (str) {
   return String(str).replace(/(\W)/g, '\\$1');
 };

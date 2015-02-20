@@ -1,6 +1,6 @@
 Template.issue.helpers({
   "statusColor" : function () {
-    var mytag = this.status || "highly-active";
+    var mytag = this.status || "active";
     return States.findOne({ tag: mytag }).color;
   },
   "status": function () {
@@ -30,7 +30,7 @@ Template.issue.helpers({
 });
 
 var startsWithProject = function (label) {
-  return label.name.match(/^Project:/g);
+  return label.name.match(/^Project:/);
 };
 
 
