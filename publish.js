@@ -31,7 +31,7 @@ if (Meteor.isServer) {
   });
 
   Meteor.publish('status-counts', function (tags) {
-    check(tags, [String]);
+    check(tags, Match.OneOf([String], ""));
     var self = this;
     var countsByStatus = {};
 
@@ -106,9 +106,11 @@ constructTagFilter = function(tags) {
     if (!tag.match(/^-/g)) {
       goodReg.push({"issueDocument.labels.name": { $regex: quotemeta(tag) }});
     } else {
-      reg.push({"issueDocument.labels.name":{$regex: quotemeta("!" + tag.slice(1)) }});
+      var regex = new RegExp(quotemeta(tag.slice(1)), 'g');
+      reg.push({"issueDocument.labels.name":{$not: regex }});
     }
   });
   reg.push({$or: goodReg});
+console.log(reg);
   return {$and: reg};
 };
