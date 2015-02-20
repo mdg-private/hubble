@@ -225,12 +225,16 @@ var classificationModifier = function (doc) {
     }
   }
 
+  var updates = _.pluck(doc.comments, 'updatedAt');
+  updates.push(doc.issueDocument.updatedAt);
+
   return {
     $set: {
       status: status,
       recentComments: recentComments,
       recentCommentsCount: _.size(recentComments),
-      msSpentInNew: msSpentInNew
+      msSpentInNew: msSpentInNew,
+      lastUpdateOrComment: _.max(updates)
     }
   };
 };

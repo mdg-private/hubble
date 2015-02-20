@@ -43,7 +43,7 @@ Template.viewIssues.helpers({
   issues: function () {
     var selectedStates = _.pluck(States.find({ selected: true }).fetch(), 'tag');
     var finder = constructIssueFinder(selectedStates, Session.get("labelFilter"));
-    return Issues.find(finder, { $sort: { "issueDocument.updatedAt": -1 } });
+    return Issues.find(finder, { $sort: { lastUpdateOrComment: -1 } });
   }
 });
 

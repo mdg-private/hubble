@@ -71,6 +71,7 @@ Issue:
   MDG comment or snooze, for issues that have any response at all.
 - recentCommentsCount*: Number
 - msSpentInNew*: Number
+- lastUpdateOrComment*: Date
 - status*:
   - mystery -- we've recorded comments for this but we haven't recorded
     issue metadata. (Probably never publish these!)
