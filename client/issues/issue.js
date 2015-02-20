@@ -25,7 +25,7 @@ Template.issue.helpers({
     return self.recentCommentsCount;
   },
   displayRecentComments: function () {
-    return Session.get(displayId(this));
+    return this.recentCommentsCount && Session.get(displayId(this));
   }
 });
 

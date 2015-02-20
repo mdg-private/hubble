@@ -25,7 +25,11 @@ Template.commentText.helpers({
 
 Template.comments.events({
   "click .snooze": function () {
-    // XXX: SNOOZE BUTTON
+    Meteor.call('snooze', {
+      repoOwner: this.repoOwner,
+      repoName: this.repoName,
+      number: this.issueDocument.number
+    });
     Session.set(displayId(this), false);
   },
   "click .highly-active": function () {
