@@ -4,17 +4,9 @@ Template.issueNav.helpers({
    },
   numIssues: function () {
     // We don't want to know the number of closed issues.
-    if (this.tag === "closed") return 0;
+//    if (this.tag === "closed") return 0;
     // Otherwise, return how many issues we have.
-    var finder = { status: this.tag };
-    // XXX: HAX
-    if (Session.get("labelFilter")) {
-      _.extend(finder,
-        { "issueDocument.labels.name":
-          { $regex: ".*" + Session.get("labelFilter") + ".*" }
-        });
-    }
-    return Issues.find(finder).count();
+    return Counts.findOne(this.tag) && Counts.findOne(this.tag).count;
   },
   filter: function () {
    var me =  document.getElementById("tag-search");
@@ -39,6 +31,7 @@ Template.viewIssues.helpers({
   }
 });
 
+
 Template.issueNav.events({
   'click .state-button' : function () {
     States.update(this._id, { $set: { selected: !this.selected }});
@@ -57,12 +50,14 @@ Template.issueNav.events({
 });
 
 filterByTag = function (tag) {
-  console.log("set", tag);
   Session.set("labelFilter", tag);
 };
 
+Counts = new Mongo.Collection("counts");
 States = new Mongo.Collection(null);
+
 Meteor.startup(function () {
+//  Meteor.subscribe("status-counts", "meteor", "hubble", Session.get("labelFilter"));
   if (! States.findOne()) {
     // new
     States.insert({ tag: "new", name: "Unresponded", color: "D2B91B", urgency: 10 });
@@ -82,4 +77,13 @@ Meteor.startup(function () {
     // highly-active
     States.insert({ tag: "highly-active", name: "Highly-Active", color: "77F",  urgency: 5 });
   }
+});
+
+Template.subscribe.onCreated( function () {
+  this.subscribe('issues-by-status', 'meteor', 'hubble', this.data.tag);
+});
+
+Tracker.autorun(function () {
+  var label = Session.get("labelFilter") || "";
+  Meteor.subscribe("status-counts", "meteor", "hubble", label);
 });

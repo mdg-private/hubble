@@ -22,7 +22,7 @@ Template.issue.helpers({
   },
   "numRecentComments": function () {
     var self = this;
-    return self.comments && _.keys(self.comments).length;
+    return self.recentCommentsCount;
   },
   displayRecentComments: function () {
     return Session.get(displayId(this));

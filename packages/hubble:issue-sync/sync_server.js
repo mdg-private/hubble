@@ -188,7 +188,7 @@ var saveIssue = function (options, cb) {
     },
     function (result, cb) {
       // If nothing changed, do nothing.
-      if (! result.nModified) {
+      if (! (result.nModified || result.upserted)) {
         cb();
       } else {
         P.needsClassification(id, cb);
