@@ -111,6 +111,5 @@ constructTagFilter = function(tags) {
     }
   });
   reg.push({$or: goodReg});
-console.log(reg);
   return {$and: reg};
 };
