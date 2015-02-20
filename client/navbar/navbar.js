@@ -15,6 +15,20 @@ Template.navbar.helpers({
   }
 });
 
+compileLink = function () {
+  var url = "";
+  if (States.findOne({ selected: true })) {
+    var selected = States.find({ selected: true }).fetch();
+    var statesStr = _.pluck(selected, "tag").join("+");
+    url += "/states/" + statesStr;
+  }
+  var filter = Session.get('labelFilter');
+  if (filter) {
+    url += "/filter/" + filter.join("+");
+  }
+  return url;
+};
+
 Template.navbar.events({
   'click .navbar-link': function () {
     Router.go("/unlabeled");
