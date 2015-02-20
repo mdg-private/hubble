@@ -6,25 +6,27 @@
        {{> commentText}}
      {{/each}}
    </div>
-   <div class="comment-panel container-fluid">
-     <div class="col-md-2">
-      <div class="highly-active comment-panel-button">
-        highly active
-      </div>
+   {{#if currentUser}}
+     <div class="comment-panel container-fluid">
+       <div class="col-md-2">
+        <div class="highly-active comment-panel-button">
+          highly active
+        </div>
+       </div>
+       <div class="col-md-4">
+        <div class="snooze comment-panel-button" aria-label="snooze">
+          snooze
+        </div>
+       </div>
+       <div class="col-md-6">
+         <a href="{{url}}" target="_blank">
+        <div class="respond comment-panel-button" aria-label="snooze">
+          respond
+        </div>
+        </a>
+       </div>
      </div>
-     <div class="col-md-4">
-      <div class="snooze comment-panel-button" aria-label="snooze">
-        snooze
-      </div>
-     </div>
-     <div class="col-md-6">
-       <a href="{{url}}" target="_blank">
-      <div class="respond comment-panel-button" aria-label="snooze">
-        respond
-      </div>
-      </a>
-     </div>
-   </div>
+   {{/if}}
  </div>
 </template>
 
