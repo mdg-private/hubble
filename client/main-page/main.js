@@ -73,19 +73,24 @@ Template.issueNav.events({
   },
   'click .search-button' : function () {
     filterByTag(document.getElementById("tag-search").value);
-    Router.go(compileLink());
+    Tracker.afterFlush(function () {
+      // let raw->cooked percolate
+      Router.go(compileLink());
+    });
   },
   'keyup #tag-search': function (evt, template) {
     // We were going to filter on enter (we need to check that evt.which ===
     // 13), but then, this is kind of cool?
     filterByTag(document.getElementById("tag-search").value);
-    Router.go(compileLink());
+    Tracker.afterFlush(function () {
+      // let raw->cooked percolate
+      Router.go(compileLink());
+    });
   }
 });
 
 filterByTag = function (tag) {
   Session.set("labelFilterRaw", tag);
-  var tags = tag.trim().split(/\s+/);
 };
 
 Tracker.autorun(function () {
