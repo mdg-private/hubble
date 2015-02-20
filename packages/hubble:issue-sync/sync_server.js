@@ -333,7 +333,7 @@ var saveComment = function (options, cb) {
     },
     function (result, cb) {
       // If nothing changed, do nothing.
-      if (! result.nModified) {
+      if (! (result.nModified || result.upsert)) {
         cb();
       } else {
         P.needsClassification(issueId, cb);
