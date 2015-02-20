@@ -31,7 +31,7 @@ if (Meteor.isServer) {
   });
 
   Meteor.publish('status-counts', function (tags) {
-    check(tags, Match.OneOf([String], ""));
+    check(tags, Match.OneOf([String], null));
     var self = this;
     var countsByStatus = {};
 
@@ -96,20 +96,32 @@ var quotemeta = function (str) {
 
 
 constructTagFilter = function(tags) {
-  if (_.isEmpty(tags)) return {};
   var goodReg = [];
-  var reg = [];
+  var badReg = [];
   _.each(tags, function (tag) {
-    // We want to match *any* of the good tags, so we want to compose that
-    // separately as an $or clause. By contrast, we want to match *none* of the
-    // bad tags.
-    if (!tag.match(/^-/g)) {
-      goodReg.push({"issueDocument.labels.name": { $regex: quotemeta(tag) }});
+    // If you're midway through typing a negative tag, don't filter out
+    // everything.
+    if (tag === '-')
+      return;
+    // We want to match *any* of the good tags, and we want none of the bad
+    // tags. Fortunately that's exactly how $in and $nin work.
+    if (tag.match(/^-/)) {
+      badReg.push(new RegExp(quotemeta(tag.slice(1)), 'i'));
     } else {
-      var regex = new RegExp(quotemeta(tag.slice(1)), 'g');
-      reg.push({"issueDocument.labels.name":{$not: regex }});
+      goodReg.push(new RegExp(quotemeta(tag), 'i'));
     }
   });
-  reg.push({$or: goodReg});
-  return {$and: reg};
+
+  if (_.isEmpty(goodReg) && _.isEmpty(badReg)) {
+    return {};
+  }
+
+  var query = {'issueDocument.labels.name': {}};
+  if (goodReg.length) {
+    query['issueDocument.labels.name'].$in = goodReg;
+  }
+  if (badReg.length) {
+    query['issueDocument.labels.name'].$nin = badReg;
+  }
+  return query;
 };

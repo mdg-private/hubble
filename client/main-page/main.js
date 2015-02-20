@@ -1,3 +1,26 @@
+Counts = new Mongo.Collection("counts");
+States = new Mongo.Collection(null);
+
+Meteor.startup(function () {
+  // new
+  States.insert({ tag: "new", name: "Unresponded", color: "D2B91B", urgency: 10 });
+
+  // active
+  States.insert({ tag: "active", name: "Active", color: "F22", urgency: 7  });
+
+  // triaged
+  States.insert({ tag: "triaged", name: "Triaged", color: "33aa55",  urgency: 3 });
+
+  // closed
+  States.insert({ tag: "closed", name: "Closed", color: "777", urgency: 0 });
+
+  // stirring
+  States.insert({ tag: "stirring", name: "Stirring", color: "FAAC58", urgency: 9 });
+
+  // highly-active
+  States.insert({ tag: "highly-active", name: "Highly Active", color: "77F",  urgency: 5 });
+});
+
 Template.issueNav.helpers({
   states: function () {
     return States.find({}, { sort: { urgency: -1 }});
@@ -62,31 +85,16 @@ Template.issueNav.events({
 
 filterByTag = function (tag) {
   Session.set("labelFilterRaw", tag);
-  var tags = tag.trim().split(' ');
-  Session.set("labelFilter", tags);
+  var tags = tag.trim().split(/\s+/);
 };
 
-Counts = new Mongo.Collection("counts");
-States = new Mongo.Collection(null);
-
-Meteor.startup(function () {
-  // new
-  States.insert({ tag: "new", name: "Unresponded", color: "D2B91B", urgency: 10 });
-
-  // active
-  States.insert({ tag: "active", name: "Active", color: "F22", urgency: 7  });
-
-  // triaged
-  States.insert({ tag: "triaged", name: "Triaged", color: "33aa55",  urgency: 3 });
-
-  // closed
-  States.insert({ tag: "closed", name: "Closed", color: "777", urgency: 0 });
-
-  // stirring
-  States.insert({ tag: "stirring", name: "Stirring", color: "FAAC58", urgency: 9 });
-
-  // highly-active
-  States.insert({ tag: "highly-active", name: "Highly Active", color: "77F",  urgency: 5 });
+Tracker.autorun(function () {
+  var raw = Session.get('labelFilterRaw');
+  if (!(raw && raw.match(/\S/))) {
+    Session.set('labelFilter', null);
+  } else {
+    Session.set('labelFilter', raw.trim().split(/\s+/));
+  }
 });
 
 Template.subscribe.onCreated( function () {
@@ -94,6 +102,6 @@ Template.subscribe.onCreated( function () {
 });
 
 Tracker.autorun(function () {
-  var label = Session.get("labelFilter") || "";
+  var label = Session.get("labelFilter");
   Meteor.subscribe("status-counts", label);
 });

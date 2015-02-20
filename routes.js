@@ -8,13 +8,11 @@ Router.route('/', function () {
 });
 
 var setTag = function (tag) {
-  var tags = tag.split(' ');
-  Session.set("labelFilter", tags);
   Session.set("labelFilterRaw", tag);
 };
 
 var setStates = function (states) {
-  var selected = states.split(" ");
+  var selected = states.split(/\s+/);
   _.each(selected, function (state) {
     States.update({ tag: state }, {$set: { selected: true }});
   });

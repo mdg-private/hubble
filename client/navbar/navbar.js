@@ -24,8 +24,9 @@ compileLink = function () {
     var statesStr = _.pluck(selected, "tag").join("+");
     url += "/states/" + statesStr;
   }
-  if (Session.get("labelFilterRaw")) {
-    url += "/filter/" + Session.get("labelFilter").join("+");
+  var filter = Session.get('labelFilter');
+  if (filter) {
+    url += "/filter/" + filter.join("+");
   }
   return url;
 };
