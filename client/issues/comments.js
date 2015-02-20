@@ -22,11 +22,11 @@ Template.commentText.helpers({
 
 Template.comments.events({
   "click .snooze": function () {
-    // snooze this;
+    // XXX: SNOOZE BUTTON
     Session.set(displayId(this), false);
   },
   "click .highly-active": function () {
-    // mute this;
+    // XXX: HIGH_ACTIVE_BUTTON
     Session.set(displayId(this), false);
   }
 });
