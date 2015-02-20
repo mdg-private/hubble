@@ -11,8 +11,10 @@ Template.comments.helpers({
 });
 
 Template.commentText.helpers({
-  commentMarkdown: function () {
-    return this.body;
+  // We're pretty sure we can trust GitHub's HTML here! If not, switch back from
+  // {{{bodyHtml}}} to <pre>{{body}}</pre>
+  trustedCommentHtml: function () {
+    return this.bodyHtml;
   },
   color: function () {
     return getCommentColor(this.id);

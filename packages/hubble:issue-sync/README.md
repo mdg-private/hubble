@@ -62,6 +62,7 @@ Issue:
     - url: String
     - htmlUrl: String
     - body: String
+    - bodyHtml: String,
     - user: User
     - createdAt: Date (from String)
     - updatedAt: Date (from String)

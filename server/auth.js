@@ -1,3 +1,6 @@
+// An extra layer of protection, especially since we trust GitHub's HTML.
+BrowserPolicy.content.disallowInlineScripts();
+
 Accounts.validateLoginAttempt(function (info) {
   check(info.user, Match.ObjectIncluding({
     services: Match.ObjectIncluding({

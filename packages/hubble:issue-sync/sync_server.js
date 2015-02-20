@@ -125,6 +125,7 @@ var commentResponseToModifier = function (options) {
     url: c.url,
     htmlUrl: c.html_url,
     body: c.body,
+    bodyHtml: c.body_html,
     user: userResponseToObject(c.user),
     createdAt: new Date(c.created_at),
     updatedAt: new Date(c.updated_at)
@@ -243,6 +244,35 @@ var resyncOneIssue = function (options, cb) {
       repoOwner: options.repoOwner,
       repoName: options.repoName,
       issueResponse: issue
+    }, cb);
+  }));
+};
+
+var resyncOneComment = function (options, cb) {
+  if (P.asyncErrorCheck(options, {
+    repoOwner: String,
+    repoName: String,
+    id: Match.Integer
+  }, cb)) return;
+
+  P.github.issues.getComment({
+    user: options.repoOwner,
+    repo: options.repoName,
+    id: options.id,
+    headers: {
+      // Include body and body_html.  (We don't trust our own Markdown generator
+      // to be safe.)
+      Accept: 'application/vnd.github.VERSION.full+json'
+    }
+  }, P.githubify(function (err, comment) {
+    if (err) {
+      cb(err);
+      return;
+    }
+    saveComment({
+      repoOwner: options.repoOwner,
+      repoName: options.repoName,
+      commentResponse: comment
     }, cb);
   }));
 };
@@ -382,7 +412,12 @@ var syncAllComments = function (options, cb) {
     repo: options.repoName,
     sort: 'updated',
     direction: 'asc',
-    per_page: MAX_PER_PAGE
+    per_page: MAX_PER_PAGE,
+    headers: {
+      // Include body and body_html.  (We don't trust our own Markdown generator
+      // to be safe.)
+      Accept: 'application/vnd.github.VERSION.full+json'
+    }
   };
   if (syncedToDoc) {
     query.since = syncedToDoc.lastDate;
@@ -487,14 +522,18 @@ P.webhook.on('pull_request', Meteor.bindEnvironment(function (event) {
 
 P.webhook.on('issue_comment', Meteor.bindEnvironment(function (event) {
   if (P.asyncErrorCheck(event.payload, Match.ObjectIncluding({
-    comment: P.Match.Comment,
+    comment: Match.ObjectIncluding({
+      id: Match.Integer
+    }),
     repository: P.Match.Repository
   }), webhookComplain)) return;
 
-  saveComment({
+  // Unfortunately, the comment event only contains markdown and not HTML. We
+  // have to go back and ask nicely for HTML.
+  resyncOneComment({
     repoOwner: event.payload.repository.owner.login,
     repoName: event.payload.repository.name,
-    commentResponse: event.payload.comment
+    id: event.payload.comment.id
   }, webhookComplain);
 }));
 

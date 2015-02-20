@@ -94,6 +94,7 @@ P.Match.Comment = Match.ObjectIncluding({
   html_url: String,
   issue_url: String,  // we parse this but don't save it
   body: String,
+  body_html: String,
   user: P.Match.User,
   created_at: timestampMatcher,
   updated_at: timestampMatcher
