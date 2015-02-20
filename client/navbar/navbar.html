@@ -9,9 +9,11 @@
       <a class="navbar-brand" href="/">
         GitHubble</a>
     </div>
+    {{#if labels}}
     <div class="navbar-link">
-      <a href="/unlabeled">Open issues without project labels</a>
+      Open & Unlabeled
     </div>
+    {{/if}}
     <div style="float:right;margin-top:1em;">
         {{> loginButtons}}
      </div>

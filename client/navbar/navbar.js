@@ -9,11 +9,9 @@ Template.logo.helpers({
 });
 
 Template.navbar.helpers({
-  fullpermalink: function () {
-    return "http://githubble.meteor.com" + compileLink();
-  },
-  smallpermalink: function () {
-    return compileLink();
+  labels: function () {
+    return ! (Router.current().route.path() === "/unlabeled");
+    return true;
   }
 });
 
@@ -30,3 +28,9 @@ compileLink = function () {
   }
   return url;
 };
+
+Template.navbar.events({
+  'click .navbar-link': function () {
+    Router.go("/unlabeled");
+  }
+});

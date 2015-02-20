@@ -21,17 +21,23 @@
 
 .navbar-link {
     position: absolute;
-    top: 1em;
+    top: 0.5em;
     left: 15em;
+    border-radius: 5px;
+    padding: 5px;
+    border: 2px solid #0431B4;
+    cursor: pointer;
+    color:  #2C53BD;
+}
+
+
+.navbar-link:hover {
+    color: #FFF;
+    background: #0431B4;
 }
 
 .logo {
     float: left;
 }
 
-.linkme{
-    position: absolute;
-    top: 0;
-    right: 15px;
-    color: #2C53BD;
-}
+/* #2C53BD */
