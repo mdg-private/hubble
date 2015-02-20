@@ -26,7 +26,7 @@ compileLink = function () {
   if (filter) {
     url += "/filter/" + filter.join("+");
   }
-  return url;
+  return url || "/";
 };
 
 Template.navbar.events({
