@@ -57,7 +57,6 @@ Counts = new Mongo.Collection("counts");
 States = new Mongo.Collection(null);
 
 Meteor.startup(function () {
-//  Meteor.subscribe("status-counts", "meteor", "hubble", Session.get("labelFilter"));
   if (! States.findOne()) {
     // new
     States.insert({ tag: "new", name: "Unresponded", color: "D2B91B", urgency: 10 });
@@ -80,10 +79,10 @@ Meteor.startup(function () {
 });
 
 Template.subscribe.onCreated( function () {
-  this.subscribe('issues-by-status', 'meteor', 'hubble', this.data.tag);
+  this.subscribe('issues-by-status', this.data.tag);
 });
 
 Tracker.autorun(function () {
   var label = Session.get("labelFilter") || "";
-  Meteor.subscribe("status-counts", "meteor", "hubble", label);
+  Meteor.subscribe("status-counts", label);
 });

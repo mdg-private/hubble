@@ -1,7 +1,5 @@
 if (Meteor.server) {
-  Meteor.publish('issues-by-status', function (repoOwner, repoName, status) {
-    check(repoOwner, String);
-    check(repoName, String);
+  Meteor.publish('issues-by-status', function (status) {
     check(status, String);
     var defFields = {
       repoOwner: 1,
@@ -19,16 +17,12 @@ if (Meteor.server) {
       status: 1
     };
     return Issues.find({
-      repoOwner: repoOwner,
-      repoName: repoName,
       status: status
     }, { fields: defFields });
   });
 
 
-  Meteor.publish('status-counts', function (repoOwner, repoName, tag) {
-    check(repoOwner, String);
-    check(repoName, String);
+  Meteor.publish('status-counts', function (tag) {
     check(tag, String);
     var self = this;
     var countsByStatus = {};
@@ -54,10 +48,10 @@ if (Meteor.server) {
 
     var initializing = true;
 
-    var finder = { repoOwner: repoOwner, repoName: repoName };
+    var finder = {};
     if (tag) {
-      _.extend(finder,
-        { 'issueDocument.labels.name': { $regex: quotemeta(tag) } });
+      // XXX maybe case insensitive?
+      finder['issueDocument.labels.name'] = { $regex: quotemeta(tag) };
     }
 
     var handle = Issues.find(finder, { fields: { status: 1 } }).observe({
@@ -82,12 +76,13 @@ if (Meteor.server) {
     });
 
     self.ready();
-    self.onStop(function () { handle.stop(); });
-
-
+    self.onStop(function () {
+      handle.stop();
+    });
   });
 
 }
-quotemeta = function (str) {
+
+var quotemeta = function (str) {
   return String(str).replace(/(\W)/g, '\\$1');
 };
