@@ -6,6 +6,11 @@
       <span class="issue-number"> #{{issueDocument.number}} </span>
       ({{status}})
     </div>
+    {{#unless isUnresponded}}
+      <div class="needs-response">
+        needs response
+      </div>
+    {{/unless}}
     <div class="issue-labels">
      {{#each nonProjectLabels}}
        {{> label}}
@@ -33,9 +38,14 @@
 
 
       {{#if numRecentComments}}
-       <div class="issue-comments {{displayRecentComments}}">
-          comments <span class="badge ">{{numRecentComments}}</span>
-       </div>
+         <div class="issue-comments {{displayRecentComments}}">
+            comments <span class="badge ">{{numRecentComments}}</span>
+         </div>
+      {{else}}
+         {{#if canBeSnoozed}}
+           {{! Normally the snooze button is under comments, but eg needs-response things may lack comments }}
+           <div class="top-level-snooze">snooze</div>
+         {{/if}}
       {{/if}}
   </div>
   {{#if displayRecentComments}}

@@ -26,6 +26,9 @@ Template.issue.helpers({
   },
   displayRecentComments: function () {
     return this.recentCommentsCount && Session.get(displayId(this));
+  },
+  isUnresponded: function () {
+    return this.status === 'unresponded';
   }
 });
 
@@ -37,6 +40,21 @@ var startsWithProject = function (label) {
 Template.issue.events({
   'click .issue-comments': function () {
     Session.set(displayId(this), ! Session.get(displayId(this)));
+  },
+  'click .needs-response': function () {
+    Meteor.call('needsResponse', {
+      repoOwner: this.repoOwner,
+      repoName: this.repoName,
+      number: this.issueDocument.number
+    });
+    Session.set(displayId(this), false);
+  },
+  'click .top-level-snooze': function () {
+    Meteor.call('snooze', {
+      repoOwner: this.repoOwner,
+      repoName: this.repoName,
+      number: this.issueDocument.number
+    });
+    Session.set(displayId(this), false);
   }
-
 });

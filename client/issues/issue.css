@@ -24,6 +24,18 @@
   vertical-align: middle;
 }
 
+.needs-response {
+  background-color: white;
+  border-radius: 2px;
+  border-size: 2px;
+  border-color: transparent;
+  float: right;
+  cursor: pointer;
+}
+.needs-response:hover {
+  background-color: blue;
+}
+
 /* Non-project labels in the top stripe */
 .issue-labels {
   vertical-align: middle;
@@ -120,4 +132,33 @@
 .issue-number {
   width: 6em;
   font-weight: bold;
+}
+
+
+.top-level-snooze {
+  cursor: pointer;
+  float: right;
+
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+  background: linear-gradient(to right, #eee, #eef);
+  color: #001;
+  width: 10em;
+  font-weight: bold;
+  text-align: center;
+
+  margin: 0em;
+  padding: 0.5em;
+
+  box-shadow: 1px 5px 5px #222;
+  border-bottom-right-radius: 0.5em;
+
+  height: 2.5em;
+
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+.top-level-snooze:hover {
+  background: linear-gradient(to right, #345, #446);
+  color: #eef;
 }

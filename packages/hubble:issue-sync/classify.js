@@ -5,6 +5,14 @@
 // --------------------------------------
 
 P.asyncMethod('snooze', function (options, cb) {
+  recordAction('snoozes', options, cb);
+});
+
+P.asyncMethod('needsResponse', function (options, cb) {
+  recordAction('needsResponses', options, cb);
+});
+
+var recordAction = function (actionField, options, cb) {
   var mongoId;
 
   P.asyncVoidSeries([
@@ -31,21 +39,19 @@ P.asyncMethod('snooze', function (options, cb) {
         })
       }))) return;
 
-      Issues.update(mongoId, {
-        $push: {
-          snoozes: {
-            when: new Date,
-            login: user.services.github.username,
-            id: user.services.github.id
-          }
-        }
-      }, cb);
+      var update = { $push: {} };
+      update.$push[actionField] = {
+        when: new Date,
+        login: user.services.github.username,
+        id: user.services.github.id
+      };
+      Issues.update(mongoId, update, cb);
     },
     function (cb) {
       P.needsClassification(mongoId, cb);
     }
   ], cb);
-});
+};
 
 P.asyncMethod('setHighlyActive', function (options, cb) {
   var mongoId;
@@ -126,7 +132,8 @@ var classificationModifier = function (doc) {
         status: 'mystery',
         recentComments: {},
         recentCommentsCount: 0,
-        msSpentInNew: null
+        msSpentInNew: null,
+        canBeSnoozed: false
       }
     };
   }
@@ -134,15 +141,21 @@ var classificationModifier = function (doc) {
   // When was the last snooze (or null if none)?
   var lastSnoozeDate =
         _.isEmpty(doc.snoozes) ? null : _.max(_.pluck(doc.snoozes, 'when'));
+  // When was the last needsResponse (or null if none)?
+  var lastNeedsResponseDate =
+        _.isEmpty(doc.needsResponses) ? null
+        : _.max(_.pluck(doc.needsResponses, 'when'));
 
   // "recent" means "since last team member commented or snoozed"
   var recentComments = {};
   var comments = [];
+  var teamComments = [];
   _.each(_.keys(doc.comments || {}).sort(), function (key) {
     var comment = doc.comments[key];
     comments.push(comment);
     if (IsTeamMember(comment.user.id)) {
       recentComments = {};
+      teamComments.push(comment);
     } else if (! lastSnoozeDate || comment.createdAt > lastSnoozeDate) {
       recentComments[key] = comment;
     }
@@ -152,9 +165,8 @@ var classificationModifier = function (doc) {
   var teamOpener = IsTeamMember(doc.issueDocument.user.id);
 
   // Did a team member comment on it at all?
-  var firstTeamComment = _.find(comments, function (comment) {
-    return IsTeamMember(comment.user.id);
-  });
+  var firstTeamComment = _.first(teamComments);
+  var lastTeamComment = _.last(teamComments);
   var teamCommented = !! firstTeamComment;
 
   // Has the issue been explicitly marked as highly active?
@@ -178,6 +190,15 @@ var classificationModifier = function (doc) {
       (lastSnoozeDate &&
        (! lastComment || lastSnoozeDate > lastComment.createdAt)));
 
+  // Has a team member indicated that this issue needs a response, and there has
+  // not been a team member comment or snooze since then?
+  var noResponseSinceNeedsReponse = (
+    lastNeedsResponseDate &&
+      (! (lastSnoozeDate &&
+          lastNeedsResponseDate < lastSnoozeDate)) &&
+      (! (lastTeamComment &&
+          lastNeedsResponseDate < lastTeamComment.createdAt)));
+
   // Is it currently open?
   var open = doc.issueDocument.open;
 
@@ -192,7 +213,13 @@ var classificationModifier = function (doc) {
   );
 
   var status = null;
-  if (! teamOpener && ! teamCommented && ! fastClose) {
+  if (noResponseSinceNeedsReponse) {
+    // If we've explicitly put it in the "needs response" category, then it
+    // stays there until we take it out of there.  It doesn't even go into
+    // unresponded-closed (which is a category that should not exist and we
+    // should delete once we get it down to zero somehow).
+    status = 'unresponded';
+  } else if (! teamOpener && ! teamCommented && ! fastClose) {
     // The only way to get out of unresponded is a publicly visible action by a
     // team member, or the special "fast close" case.
     status = open ? 'unresponded' : 'unresponded-closed';
@@ -214,19 +241,26 @@ var classificationModifier = function (doc) {
     status = 'stirring';
   }
 
+  // Calculate a statistic which tracks the first time that we responded to an
+  // issue.
   var msSpentInNew = null;
-  if (status !== 'unresponded' && status !== 'unresponded-closed') {
-    if (teamOpener) {
-      msSpentInNew = 0;
-    } else if (fastClose) {
-      msSpentInNew = doc.issueDocument.closedAt - doc.issueDocument.createdAt;
-    } else {
-      msSpentInNew = firstTeamComment.createdAt - doc.issueDocument.createdAt;
-    }
+  if (teamOpener) {
+    msSpentInNew = 0;
+  } else if (fastClose) {
+    msSpentInNew = doc.issueDocument.closedAt - doc.issueDocument.createdAt;
+  } else if (firstTeamComment) {
+    msSpentInNew = firstTeamComment.createdAt - doc.issueDocument.createdAt;
   }
 
   var updates = _.pluck(doc.comments, 'updatedAt');
   updates.push(doc.issueDocument.updatedAt);
+
+  // Can we snooze this?  We can't if it's in one of the two categories that
+  // means we've already said everything we could say, and we also can't if
+  // we've never made a public action.
+  var canBeSnoozed = (
+    (teamOpener || teamCommented || fastClose) &&
+      status !== 'closed' && status !== 'triaged');
 
   return {
     $set: {
@@ -234,7 +268,8 @@ var classificationModifier = function (doc) {
       recentComments: recentComments,
       recentCommentsCount: _.size(recentComments),
       msSpentInNew: msSpentInNew,
-      lastUpdateOrComment: _.max(updates)
+      lastUpdateOrComment: _.max(updates),
+      canBeSnoozed: canBeSnoozed
     }
   };
 };

@@ -14,7 +14,8 @@ if (Meteor.isServer) {
       "recentCommentsCount" : 1,
       lastUpdateOrComment: 1,
       highlyActive: 1,
-      status: 1
+      status: 1,
+      canBeSnoozed: 1
     };
 
   Meteor.publish('issues-by-status', function (status) {

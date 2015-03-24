@@ -49,6 +49,10 @@ Issue:
   - when: Date
   - login: String
   - id: Number (github user id)
+- needsResponses: Array of Object
+  - when: Date
+  - login: String
+  - id: Number (github user id)
 - highlyActive: Boolean
 - highlyActiveLog: Array of Object
   - when: Date
@@ -71,21 +75,28 @@ Issue:
   MDG comment or snooze, for issues that have any response at all.
 - recentCommentsCount*: Number
 - msSpentInNew*: Number
+- canBeSnoozed*: Boolean
 - lastUpdateOrComment*: Date
 - status*:
   - mystery -- we've recorded comments for this but we haven't recorded
     issue metadata. (Probably never publish these!)
   - unresponded/unresponded-closed -- no MDG opener/commenter and not
-    (closed-and-only-commented-on-by-original-user)
+    (closed-and-only-commented-on-by-original-user)... or there has
+    been a "needs response" with no MDG comment or snooze since then
+    (and note: "needs response" makes this unresponded, never
+    unreseponded-closed)
   - stirring -- exists at least one MDG opener/comment, closed, and last
-    opener/comment/snooze is non-MDG, and not highlyActive
+    opener/comment/snooze is non-MDG, and not highlyActive, and
+    no overriding needsResponse
   - active -- exists at least one MDG opener/comment, open, and last
-    opener/comment/snooze is non-MDG, and not highlyActive
+    opener/comment/snooze is non-MDG, and not highlyActive, and no
+    overriding needsResponse
   - highly-active -- exists at least one MDG opener/comment and has highlyActive set
   - triaged -- exists at least one MDG opener/comment, and last opener/comment/snooze
-    is MDG, and open, and not highlyActive
+    is MDG, and open, and not highlyActive, and no overriding needsReponse
   - closed -- closed and not highlyActive and either
-    (closed-and-only-commented-on-by-original-user) or the last opener/comment/snooze is MDG
+    (closed-and-only-commented-on-by-original-user) or the last
+    opener/comment/snooze is MDG, and no overriding needsReponse
 
 `*` means "derived deterministically from other values on the document (plus
 list of MDG members)".
