@@ -73,6 +73,10 @@
   width: 75px;
 }
 
+.user-login {
+  margin-bottom: 0;
+}
+
 /* comments */
 .issue-comments {
   cursor: pointer;

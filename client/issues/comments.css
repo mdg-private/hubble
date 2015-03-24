@@ -80,3 +80,7 @@
 .comment {
   padding-top: 1em;
 }
+
+.comment-timestamp {
+    margin-bottom: 0.5em;
+}

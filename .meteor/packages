@@ -13,3 +13,4 @@ accounts-github
 audit-argument-checks
 force-ssl
 browser-policy
+glasser:reactive-fromnow@=0.0.1

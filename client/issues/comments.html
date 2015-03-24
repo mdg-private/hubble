@@ -37,7 +37,10 @@
 
 <template name="commentText">
   <div class="comment container-fluid" style="background-color:#{{color}}">
-    <div class="col-md-2">  {{> user}} </div>
+    <div class="col-md-2">
+      <div class="row">{{> user}}</div>
+      <div class="row comment-timestamp">{{ showTimestamp createdAt }}</div>
+    </div>
     <div class="col-md-10">
       {{{trustedCommentHtml}}}
     </div>
