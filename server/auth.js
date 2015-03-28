@@ -4,6 +4,9 @@ BrowserPolicy.content.disallowInlineScripts();
 // ... but we should allow GitHub avatar images.
 BrowserPolicy.content.allowImageOrigin(
   'https://avatars.githubusercontent.com/');
+// ... and GitHub emoji, etc.
+BrowserPolicy.content.allowImageOrigin(
+  'https://assets-cdn.github.com/');
 
 Accounts.validateLoginAttempt(function (info) {
   check(info.user, Match.ObjectIncluding({
