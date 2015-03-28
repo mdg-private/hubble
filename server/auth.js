@@ -7,6 +7,9 @@ BrowserPolicy.content.allowImageOrigin(
 // ... and GitHub emoji, etc.
 BrowserPolicy.content.allowImageOrigin(
   'https://assets-cdn.github.com/');
+// ... and images in posts.
+BrowserPolicy.content.allowImageOrigin(
+  'https://cloud.githubusercontent.com/');
 
 Accounts.validateLoginAttempt(function (info) {
   check(info.user, Match.ObjectIncluding({
