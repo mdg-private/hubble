@@ -168,6 +168,8 @@ var classificationModifier = function (doc) {
   var firstTeamComment = _.first(teamComments);
   var lastTeamComment = _.last(teamComments);
   var teamCommented = !! firstTeamComment;
+  // Special case for pre-2015 unresponded issues.
+  var manuallyMarkedAsResponded = !! doc.manuallyMarkedAsResponded;
 
   // Has the issue been explicitly marked as highly active?
   var highlyActive = !! doc.highlyActive;
@@ -219,7 +221,8 @@ var classificationModifier = function (doc) {
     // unresponded-closed (which is a category that should not exist and we
     // should delete once we get it down to zero somehow).
     status = 'unresponded';
-  } else if (! teamOpener && ! teamCommented && ! fastClose) {
+  } else if (! teamOpener && ! teamCommented && ! fastClose &&
+             ! manuallyMarkedAsResponded) {
     // The only way to get out of unresponded is a publicly visible action by a
     // team member, or the special "fast close" case.
     status = open ? 'unresponded' : 'unresponded-closed';

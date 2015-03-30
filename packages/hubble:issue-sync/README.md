@@ -70,6 +70,12 @@ Issue:
     - user: User
     - createdAt: Date (from String)
     - updatedAt: Date (from String)
+- manuallyMarkedAsResponded: Boolean
+  Needs to be manually set on the database.  This allows an issue
+  to transition out of 'unresponded' despite not actually being responded
+  to.  In March 2015 it was added to all unresponded issues that had had
+  no actions in 2015 (all of these issues were also closed). It's effectively
+  equivalent to "opened by team member".
 - recentComments*: Map
   This is a subset of comments containing comments since the last
   MDG comment or snooze, for issues that have any response at all.
