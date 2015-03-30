@@ -306,6 +306,14 @@ P.reclassifyAllIssues = function (cb) {
   }, cb);
 };
 
+P.asyncMethod('reclassifyAllIssues', function (cb) {
+  var self = this;
+  P.asyncVoidSeries([
+    P.requireLoggedIn,
+    P.reclassifyAllIssues
+  ], cb);
+});
+
 // Classifies everything currently in the queue. Result is a bool saying whether
 // anything was seen.
 var classifyCurrentQueue = function (cb) {
