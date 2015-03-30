@@ -40,6 +40,8 @@ var timestampMatcher = Match.Where(function (ts) {
 
 P.Match = {};
 
+// Matcher for User coming from GitHub's API (slightly different from our
+// internal schema!)
 P.Match.User = Match.ObjectIncluding({
   login: String,
   id: Match.Integer,
@@ -48,6 +50,8 @@ P.Match.User = Match.ObjectIncluding({
   html_url: String
 });
 
+// Matcher for Issue coming from GitHub's API (slightly different from our
+// internal schema!)
 P.Match.Issue = Match.ObjectIncluding({
   id: Match.Integer,
   url: String,
@@ -88,6 +92,8 @@ P.Match.Issue = Match.ObjectIncluding({
   updated_at: timestampMatcher
 });
 
+// Matcher for Comment coming from GitHub's API (slightly different from our
+// internal schema!)
 P.Match.Comment = Match.ObjectIncluding({
   id: Match.Integer,
   url: String,
@@ -100,6 +106,8 @@ P.Match.Comment = Match.ObjectIncluding({
   updated_at: timestampMatcher
 });
 
+// Matcher for Repository coming from GitHub's API (different from our internal
+// schema!)
 P.Match.Repository = Match.ObjectIncluding({
   owner: Match.ObjectIncluding({
     login: String
