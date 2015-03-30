@@ -5,9 +5,6 @@ Meteor.startup(function () {
   // new
   States.insert({ tag: "unresponded", name: "Unresponded", color: "D2B91B", urgency: 10 });
 
-  States.insert({
-    tag: "unresponded-closed", name: "Unresponded & Closed", color: "657489", urgency: 0.5 });
-
   // active
   States.insert({ tag: "active", name: "Active", color: "F22", urgency: 7  });
 

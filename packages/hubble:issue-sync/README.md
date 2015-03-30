@@ -84,25 +84,24 @@ Issue:
 - canBeSnoozed*: Boolean
 - lastUpdateOrComment*: Date
 - status*:
+  In the following, "Responded" means that the issue was opened by a team
+  member, or there is comment by a team member, or the manuallyMarkedAsResponded
+  flag is set.
   - mystery -- we've recorded comments for this but we haven't recorded
     issue metadata. (Probably never publish these!)
-  - unresponded/unresponded-closed -- no MDG opener/commenter and not
-    (closed-and-only-commented-on-by-original-user)... or there has
-    been a "needs response" with no MDG comment or snooze since then
-    (and note: "needs response" makes this unresponded, never
-    unreseponded-closed)
-  - stirring -- exists at least one MDG opener/comment, closed, and last
-    opener/comment/snooze is non-MDG, and not highlyActive, and
-    no overriding needsResponse
-  - active -- exists at least one MDG opener/comment, open, and last
-    opener/comment/snooze is non-MDG, and not highlyActive, and no
-    overriding needsResponse
-  - highly-active -- exists at least one MDG opener/comment and has highlyActive set
-  - triaged -- exists at least one MDG opener/comment, and last opener/comment/snooze
-    is MDG, and open, and not highlyActive, and no overriding needsReponse
-  - closed -- closed and not highlyActive and either
-    (closed-and-only-commented-on-by-original-user) or the last
+  - unresponded -- one of the following:
+    - not Responded
+    - there has been a "needs response" with no MDG comment or snooze since
+      then
+  - active -- *open* and Responded and not highlyActive and last
+    opener/comment/snooze is non-MDG, and no overriding needsResponse
+  - stirring -- *closed* and Responded and not highlyActive and last
+    opener/comment/snooze is non-MDG, and no overriding needsResponse
+  - triaged -- *open* and Responded and not highly Active and last
     opener/comment/snooze is MDG, and no overriding needsReponse
+  - closed -- *closed* and Responded and not highly Active and last
+    opener/comment/snooze is MDG, and no overriding needsReponse
+  - highly-active -- Responded and has highlyActive set
 
 `*` means "derived deterministically from other values on the document (plus
 list of MDG members)".

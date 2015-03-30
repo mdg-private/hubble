@@ -217,17 +217,16 @@ var classificationModifier = function (doc) {
   var status = null;
   if (noResponseSinceNeedsReponse) {
     // If we've explicitly put it in the "needs response" category, then it
-    // stays there until we take it out of there.  It doesn't even go into
-    // unresponded-closed (which is a category that should not exist and we
-    // should delete once we get it down to zero somehow).
+    // stays there until we take it out of there.
     status = 'unresponded';
   } else if (! teamOpener && ! teamCommented && ! fastClose &&
              ! manuallyMarkedAsResponded) {
     // The only way to get out of unresponded is a publicly visible action by a
-    // team member, or the special "fast close" case.
-    status = open ? 'unresponded' : 'unresponded-closed';
+    // team member, or the special "fast close" case (or manually marking it
+    // in the database, which we did once for legacy issues).
+    status = 'unresponded';
   } else if (highlyActive) {
-    // Anything not unresponded* with the highlyActive bit is HIGHLY-ACTIVE.
+    // Anything not unresponded with the highlyActive bit is HIGHLY-ACTIVE.
     status = 'highly-active';
   } else if (open && lastActionWasTeam) {
     // It's open and we were the last to act (possibly by snoozing).
