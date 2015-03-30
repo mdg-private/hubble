@@ -27,8 +27,8 @@ Template.issue.helpers({
   displayRecentComments: function () {
     return this.recentCommentsCount && Session.get(displayId(this));
   },
-  isUnresponded: function () {
-    return this.status === 'unresponded';
+  displayNeedsResponseButton: function () {
+    return this.status !== 'unresponded' && Meteor.userId();
   }
 });
 

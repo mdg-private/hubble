@@ -6,11 +6,11 @@
       <span class="issue-number"> #{{issueDocument.number}} </span>
       ({{status}})
     </div>
-    {{#unless isUnresponded}}
+    {{#if displayNeedsResponseButton}}
       <div class="needs-response">
         needs response
       </div>
-    {{/unless}}
+    {{/if}}
     <div class="issue-labels">
      {{#each nonProjectLabels}}
        {{> label}}
