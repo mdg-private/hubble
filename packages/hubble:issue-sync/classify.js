@@ -186,7 +186,7 @@ var classificationModifier = function (doc) {
 
   // Was the last action (including snooze) by a team member?  (This only gets
   // you out of 'new' if it was a public action, but it can get you out of
-  // active/stirring into triaged/closed.)
+  // active/stirring into triaged/resolved.)
   var lastActionWasTeam = (
     lastPublicActionWasTeam ||
       (lastSnoozeDate &&
@@ -234,7 +234,7 @@ var classificationModifier = function (doc) {
   } else if (! open && (lastActionWasTeam || fastClose)) {
     // It's closed and either we were the last to act, or the opener is the only
     // user to interact with this issue at all and closed it.
-    status = 'closed';
+    status = 'resolved';
   } else if (open) {
     // It's open, and the last action was not a team member.
     status = 'active';
@@ -262,7 +262,7 @@ var classificationModifier = function (doc) {
   // we've never made a public action.
   var canBeSnoozed = (
     (teamOpener || teamCommented || fastClose) &&
-      status !== 'closed' && status !== 'triaged');
+      status !== 'resolved' && status !== 'triaged');
 
   return {
     $set: {

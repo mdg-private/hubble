@@ -99,7 +99,7 @@ Issue:
     opener/comment/snooze is non-MDG, and no overriding needsResponse
   - triaged -- *open* and Responded and not highly Active and last
     opener/comment/snooze is MDG, and no overriding needsReponse
-  - closed -- *closed* and Responded and not highly Active and last
+  - resolved -- *closed* and Responded and not highly Active and last
     opener/comment/snooze is MDG, and no overriding needsReponse
   - highly-active -- Responded and has highlyActive set
 

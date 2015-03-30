@@ -11,8 +11,8 @@ Meteor.startup(function () {
   // triaged
   States.insert({ tag: "triaged", name: "Triaged", color: "33aa55",  urgency: 3 });
 
-  // closed
-  States.insert({ tag: "closed", name: "Closed", color: "777", urgency: 1 });
+  // resolved
+  States.insert({ tag: "resolved", name: "Resolved", color: "777", urgency: 1 });
 
   // stirring
   States.insert({ tag: "stirring", name: "Stirring", color: "FAAC58", urgency: 9 });
@@ -26,8 +26,6 @@ Template.issueNav.helpers({
     return States.find({}, { sort: { urgency: -1 }});
    },
   numIssues: function () {
-    // We don't want to know the number of closed issues.
-//    if (this.tag === "closed") return 0;
     // Otherwise, return how many issues we have.
     return Counts.findOne(this.tag) && Counts.findOne(this.tag).count;
   },
