@@ -56,5 +56,21 @@ Template.issue.events({
       number: this.issueDocument.number
     });
     Session.set(displayId(this), false);
+  },
+  'click .claim-button': function() {
+    Meteor.call('claim', {
+      repoOwner: this.repoOwner,
+      repoName: this.repoName,
+      number: this.issueDocument.number
+    });
+    Session.set(displayId(this), false);
+  },
+  'click .unclaim-button': function() {
+    Meteor.call('unclaim', {
+      repoOwner: this.repoOwner,
+      repoName: this.repoName,
+      number: this.issueDocument.number
+    });
+    Session.set(displayId(this), false);
   }
 });
