@@ -24,6 +24,25 @@
   vertical-align: middle;
 }
 
+.claimed-text {
+  padding-right: 50px;
+  color: white;
+  border-size: 5px;
+  border-radius: 5px;
+}
+.claim-button, .unclaim-button {
+  background-color: green;
+  border-radius: 2px;
+  border-size: 2px;
+  border-color: transparent;
+  float: right;
+  cursor: pointer;
+}
+
+.unclaim-button {
+  background-color: red;
+}
+
 .needs-response {
   background-color: white;
   border-radius: 2px;
