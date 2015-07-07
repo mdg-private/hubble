@@ -6,18 +6,20 @@
       <span class="issue-number"> #{{issueDocument.number}} </span>
       ({{status}})
     </div>
-    {{#unless claimedBy}}
-      <button class="claim-button">
-        Claim this issue
-      </button>
-    {{else}}
-      <button class="unclaim-button">
-        Unclaim this issue
-      </button>
-      <div class="claimed-text" >
-        Issue has been claimed by {{claimedBy}}
-      </div>
-    {{/unless}}
+    {{#if currentUser}}
+      {{#unless claimedBy}}
+        <button class="claim-button">
+          Claim this issue
+        </button>
+      {{else}}
+        <button class="unclaim-button">
+          Unclaim this issue
+        </button>
+        <div class="claimed-text" >
+          Issue has been claimed by {{claimedBy}}
+        </div>
+      {{/unless}}
+    {{/if}}
     {{#if displayNeedsResponseButton}}
       <div class="needs-response">
         needs response
