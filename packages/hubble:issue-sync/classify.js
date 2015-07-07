@@ -12,48 +12,6 @@ P.asyncMethod('needsResponse', function (options, cb) {
   recordAction('needsResponses', options, cb);
 });
 
-Meteor.methods(
-{
-  claim : function(options, cb) {
-    check(options, {
-      repoOwner: String,
-      repoName: String,
-      number: Match.Integer
-    });
-    var mongoId = P.issueMongoId(options.repoOwner, options.repoName, options.number);
-    if (! Issues.findOne(mongoId)) {
-        cb(new Meteor.Error(404, "No such issue"));
-        return;
-    }
-    var user = new Meteor.user();
-    Issues.update(mongoId, {
-      $set: {
-        claimed: true,
-        claimedBy: user.services.github.username
-      }
-    });
-  },
-
-  unclaim: function(options, cb) {
-    check(options, {
-      repoOwner: String,
-      repoName: String,
-      number: Match.Integer
-    });
-    var mongoId = P.issueMongoId(options.repoOwner, options.repoName, options.number);
-    if (! Issues.findOne(mongoId)) {
-        cb(new Meteor.Error(404, "No such issue"));
-        return;
-    }
-    var user = new Meteor.user();
-    Issues.update(mongoId, {
-      $set: {
-        claimed: false,
-        claimedBy: null
-      }
-    });
-  }
-});
 
 var recordAction = function (actionField, options, cb) {
   var mongoId;
@@ -72,7 +30,7 @@ var recordAction = function (actionField, options, cb) {
         cb(new Meteor.Error(404, "No such issue"));
         return;
       }
-      var user = new Meteor.user();
+      var user = Meteor.user();
       if (P.asyncErrorCheck(user, Match.ObjectIncluding({
         services: Match.ObjectIncluding({
           github: Match.ObjectIncluding({
@@ -80,7 +38,7 @@ var recordAction = function (actionField, options, cb) {
             username: String
           })
         })
-      }))) return;
+      }), cb)) return;
 
       var update = { $push: {} };
       update.$push[actionField] = {
@@ -114,7 +72,7 @@ P.asyncMethod('setHighlyActive', function (options, cb) {
         cb(new Meteor.Error(404, "No such issue"));
         return;
       }
-      var user = new Meteor.user();
+      var user = Meteor.user();
       if (P.asyncErrorCheck(user, Match.ObjectIncluding({
         services: Match.ObjectIncluding({
           github: Match.ObjectIncluding({

@@ -63,7 +63,6 @@ Template.issue.events({
       repoName: this.repoName,
       number: this.issueDocument.number
     });
-    Session.set(displayId(this), false);
   },
   'click .unclaim-button': function() {
     Meteor.call('unclaim', {
@@ -71,6 +70,5 @@ Template.issue.events({
       repoName: this.repoName,
       number: this.issueDocument.number
     });
-    Session.set(displayId(this), false);
   }
 });

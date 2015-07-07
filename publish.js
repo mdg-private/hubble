@@ -16,7 +16,6 @@ if (Meteor.isServer) {
       highlyActive: 1,
       status: 1,
       canBeSnoozed: 1,
-      claimed: 1,
       claimedBy: 1
     };
 
