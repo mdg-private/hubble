@@ -1,4 +1,5 @@
 P.asyncMethod('claim', function (options, cb) {
+  var mongoId, githubUsername;
   P.asyncVoidSeries([
     P.requireLoggedIn,
     _.partial(P.asyncCheck, options, {
@@ -7,7 +8,7 @@ P.asyncMethod('claim', function (options, cb) {
       number: Match.Integer
     }),
     function (cb) {
-      var mongoId = P.issueMongoId(
+      mongoId = P.issueMongoId(
         options.repoOwner, options.repoName, options.number);
       if (! Issues.findOne(mongoId)) {
         cb(new Meteor.Error(404, "No such issue"));
@@ -21,12 +22,17 @@ P.asyncMethod('claim', function (options, cb) {
           })
         })
       }), cb)) return;
+      githubUsername = user.services.github.username;
 
-      Issues.update(mongoId, {
-        $set: {
-          claimedBy: user.services.github.username
-        }
-      }, cb);
+      // Unclaim everything.
+      Issues.update({claimedBy: githubUsername},
+                    {$unset: {claimedBy: 1}},
+                    {multi: true},
+                    cb);
+    },
+    function (cb) {
+      // Claim this one.
+      Issues.update(mongoId, {$set: {claimedBy: githubUsername}}, cb);
     }
   ], cb);
 });
