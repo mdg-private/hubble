@@ -57,3 +57,4 @@ Note that the oplog URL needs to be on the `local` database (ie the URL path is
 `local`) and specify `&authSource=githubble` (ie it gets its authentication from
 the main `githubble` database).
 
+Note also that githubble now runs on Galaxy under the mdg account. `settings.json` can be found in Dropbox, at the date of writing at `/galaxy-prod/keys/Githubble`.
