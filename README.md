@@ -1,3 +1,9 @@
+# Archival
+This repo was archived by the Apollo Security team on 2023-05-26
+
+Please reach out at security@apollographql.com with questions
+
+
 # githubble
 
 A tool for triaging GitHub issues.
